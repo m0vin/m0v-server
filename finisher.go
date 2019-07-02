@@ -2,11 +2,14 @@ package main
 
 import (
         //"context"
-	//"crypto/tls"
+	"crypto"
+	"crypto/rand"
 	"crypto/x509"
 	"crypto/ecdsa"
+	"crypto/rsa"
         "expvar"
         "encoding/pem"
+        "errors"
 	"flag"
 	"fmt"
         "golang.org/x/crypto/acme"
@@ -14,8 +17,10 @@ import (
         "io/ioutil"
 	//"m0v.in/finisher/data"
         "net/http"
+        "os"
         //"reflect"
 	"rsc.io/quote"
+        "strings"
         "time"
 )
 
@@ -26,6 +31,9 @@ var (
         httpWto int
         httpPort int
         httpsPort int
+        keyName = "/home/sridhar/prod/b00m_tls/b00m-key.pem"
+        keyGen = false
+        privKey *rsa.PrivateKey
         man *autocert.Manager
         c *acme.Client
         prod1 = "https://acme-v01.api.letsencrypt.org/directory"
@@ -36,12 +44,44 @@ var (
 )
 
 func init() {
-        c = &acme.Client{DirectoryURL: prod1}
+        data, err := ioutil.ReadFile(keyName)
+        if err != nil {
+                fmt.Printf("%s %v \n", "Generate rsa key", err)
+                keyGen = true
+        }
+        if keyGen {
+                privKey, err = rsa.GenerateKey(rand.Reader, 2048)
+                if err != nil {
+                        fmt.Printf("%s \n", "Generating rsa key")
+                        os.Exit(1) // no other option but to exit
+                }
+        } else { // using key from file
+                // private key
+                priv, _ := pem.Decode(data) // ignore public key
+                if priv == nil || !strings.Contains(priv.Type, "PRIVATE") {
+                        fmt.Printf("%s \n", "Nil rsa key")
+                        os.Exit(1) // no other option but to exit
+                        /*if key == nil {
+                                key, err = rsa.GenerateKey(rand.Reader, 2048)
+                                if err != nil {
+                                        fmt.Printf("%s \n", "Generating rsa key")
+                                        os.Exit(1) // no other option but to exit
+                                }
+                        }*/
+                }
+                signer, err := parsePrivateKey(priv.Bytes)
+                if err != nil {
+                        fmt.Printf("%s \n", "Parsing rsa key")
+                        os.Exit(1) // no other option but to exit
+                }
+                privKey = signer.(*rsa.PrivateKey)
+        }
+        c = &acme.Client{DirectoryURL: prod1, Key: privKey}
         man = &autocert.Manager{
                 Client: c,
                 Email: "rcs@m0v.in",
                 Prompt: autocert.AcceptTOS,
-                Cache: autocert.DirCache("/home/sridhar/prod/m0v_tls"),
+                Cache: autocert.DirCache("/home/sridhar/prod/b00m_tls"),
                 //HostPolicy: autocert.HostWhitelist("m0v.in", "www.m0v.in"),
         }
         oks = expvar.NewInt("oks")
@@ -182,4 +222,30 @@ func GetKey(path string) (*ecdsa.PrivateKey, error) {
                 return nil, err
         }
         return k, nil
+}
+
+// Attempt to parse the given private key DER block. OpenSSL 0.9.8 generates
+// PKCS#1 private keys by default, while OpenSSL 1.0.0 generates PKCS#8 keys.
+// OpenSSL ecparam generates SEC1 EC private keys for ECDSA. We try all three.
+//
+// Inspired by parsePrivateKey in crypto/tls/tls.go.
+func parsePrivateKey(der []byte) (crypto.Signer, error) {
+	if key, err := x509.ParsePKCS1PrivateKey(der); err == nil {
+		return key, nil
+	}
+	if key, err := x509.ParsePKCS8PrivateKey(der); err == nil {
+		switch key := key.(type) {
+		case *rsa.PrivateKey:
+			return key, nil
+		case *ecdsa.PrivateKey:
+			return key, nil
+		default:
+			return nil, errors.New("acme/autocert: unknown private key type in PKCS#8 wrapping")
+		}
+	}
+	if key, err := x509.ParseECPrivateKey(der); err == nil {
+		return key, nil
+	}
+
+	return nil, errors.New("acme/autocert: failed to parse private key")
 }
