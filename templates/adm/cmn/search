@@ -1,0 +1,15 @@
+{{define "search"}}
+
+        <span id="search"> <!--search-->
+		<form id="goods_srch" name="goods_srch" action="/admin/search" accept-charset="utf-8">
+			<table>
+				<tr>
+          				<td><input type="text" name="srchTrm" class="default" value="Search" /></td>
+					<td><input type="submit" class="button button-search" value="Submit" /></td>
+				</tr>
+			</table>
+		</form>
+	</span> <!--search-->
+
+
+{{end}}

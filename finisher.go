@@ -12,17 +12,38 @@ import (
         "errors"
 	"flag"
 	"fmt"
+        "github.com/golang/glog"
         "golang.org/x/crypto/acme"
         "golang.org/x/crypto/acme/autocert"
+	"html/template"
         "io/ioutil"
-	//"m0v.in/finisher/data"
+	"m0v.in/finisher/data"
         "net/http"
         "os"
         //"reflect"
 	"rsc.io/quote"
+        "strconv"
         "strings"
         "time"
 )
+
+type Render struct { //for most purposes
+        Message string `json:"message"`
+        //Sub sub `json:"sub"`
+        Pubs []*data.Pub `json:"pubs,string"`
+        Categories []Category `json:"categories,string"`
+}
+
+type Render1 struct { //for packets
+        Message string `json:"message"`
+        //Sub sub `json:"sub"`
+        Packet *data.Packet `json:"packet,string"`
+        Categories []Category `json:"categories,string"`
+}
+
+type Category struct {
+        Name string `json:"name"`
+}
 
 var (
         oks *expvar.Int
@@ -41,6 +62,10 @@ var (
         reg1 = "https://acme-v01.api.letsencrypt.org/acme/reg"
         stag2 = "https://acme-staging-v02.api.letsencrypt.org/directory"
         stag1 = "https://acme-staging.api.letsencrypt.org/directory"
+        // templates
+	tmpl_adm_pbs_lst = template.Must(template.ParseFiles("templates/adm/pubs_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_pck_lst = template.Must(template.ParseFiles("templates/adm/pcks_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
+        dflt_ctgrs = []Category{Category{Name: "GridWatch", }, Category{Name: "Leaderboard"}}
 )
 
 func init() {
@@ -179,6 +204,58 @@ func startHttp() {
 func startHttps() {
         mux := http.NewServeMux()
         mux.Handle("/debug/vars", expvar.Handler())
+        mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+        mux.Handle("/admin/packets/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+                toks := strings.Split(r.URL.Path, "/")
+                if len(toks) <= 3 {
+                        glog.Infof("Nothing to see at %s \n", r.URL.Path)
+                        epbs := make([]*data.Pub, 3)
+                        render := Render {"Nothing to see here", epbs, dflt_ctgrs}
+                        _ = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                        return
+                }
+                id, err := strconv.ParseInt(toks[3], 10, 64)
+                if err != nil {
+                        glog.Infof("strconv: %v \n", err)
+                        render := Render1 {"Nothing to see here", &data.Packet{}, dflt_ctgrs}
+                        _ = tmpl_adm_pck_lst.ExecuteTemplate(w, "base", render)
+                        return
+                }
+                pk, err := data.GetLastPacket(id)
+                if err != nil {
+                        glog.Infof("Https %v \n", err)
+                        render := Render1 {"Packets", &data.Packet{}, dflt_ctgrs}
+                        _ = tmpl_adm_pck_lst.ExecuteTemplate(w, "base", render)
+                        return
+                }
+                render := Render1 {"Packets", pk, dflt_ctgrs}
+                err = tmpl_adm_pck_lst.ExecuteTemplate(w, "base", render)
+                if err != nil {
+                        fmt.Printf("Https %v \n", err)
+                        return
+                }
+                return
+        }))
+        mux.Handle("/admin/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+                //pbs := make([]*data.Pub, 0)
+                //render := Render {"Pubs", pbs, dflt_ctgrs}
+                //err = tmpl_adm_gds_lst.ExecuteTemplate(w, "admin", s0)
+                pbs, err := data.GetPubs(10)
+                if err != nil {
+                        fmt.Printf("Https %v \n", err)
+                        epbs := make([]*data.Pub, 3)
+                        render := Render {"Pubs", epbs, dflt_ctgrs}
+                        _ = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                        return
+                }
+                render := Render {"Pubs", pbs, dflt_ctgrs}
+                err = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                if err != nil {
+                        fmt.Printf("Https %v \n", err)
+                        return
+                }
+                return
+        }))
         mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
                 tlsoks.Add(1)
                 fmt.Printf("Secure visitor %s %v \n", r.RemoteAddr, *tlsoks)

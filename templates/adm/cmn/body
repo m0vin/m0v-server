@@ -1,0 +1,76 @@
+{{define "body"}}
+<body>
+  <div id="notification"></div>
+  <div class="page">
+    <div class="pivot" style="background-color: #FFFFFF;">
+      <header id="header" style="background-color: #FFFFFF;">
+        <div id="logo"> <!--logo-->
+          <a href="http://www.m0v.in"><img src="/static/logo_wo_bgrnd.png" title="M0V" alt="M0V" width="130px" height="44px"/>
+          </a>
+        </div> <!--logo -->
+	<br>
+	<span id="welcome" class="hide-phone"> 
+	  <span id="welword">Welcome &nbsp;</span>
+	  <span id="user" > </span> 
+          <span id="login" class="item" > &nbsp; Login
+            <div class="drop-content">
+              <div class="drop-body">
+                <form id="userlogin">
+                  <input type="text" id="email" value="email"/>					
+                  <input type="password" id="pswd" value="pswd"/>					
+                  <input type="submit" value="Login"/>
+                </form>
+              </div>
+            </div>
+	     or <a href="/account/register">Register</a>.
+	  </span>
+	  <span id="logout"> 
+	    <a href="/account/logout"  > &nbsp; Logout </a>
+		  <!--<form id="userlogout">
+		    <input type="submit" value="Logout"/>
+		  </form>-->
+	  </span>
+	  <span id=result></span>
+	</span>
+      </header>
+    
+      <nav class="nav-phone show-phone hide-desktop hide-tablet">
+	<div>Menu</div>
+	<select onChange="location = this.value">
+	  <option></option>
+	  <option value="http://www.madowatt.in">Home</option>
+	  <option value="http://www.madowatt.in/microinverters">Inverters</option>
+	  <option value="http://www.madowatt.in/meters">Meters</option>
+	  <option value="http://www.madowatt.in/modules">Modules</option>
+	  <option value="http://www.madowatt.in/batteries">Batteries</option>
+	  <option value="http://www.madowatt.in/connectors">Chargers</option>
+	  <option value="http://www.madowatt.in/components">Components</option>
+	  <option value="http://www.madowatt.in/mounts">Mounts</option>
+	  <option value="http://www.madowatt.in/tools">Tools/Connectors </option>
+	  <option value="http://www.madowatt.in/power-supply">Power Supplies</option>
+	  <option value="http://www.madowatt.in/sale">Sale</option>
+	</select>
+      </nav>
+      <nav class="nav hide-phone">
+	<ul>
+	  <li class="tftooltip" title="Home"><a href="/goods"><span class="icon"></span></a></li>
+          <!--CAT MENU LINKS-->
+		{{template "menu" .}}
+	</ul>
+	<div class="clear"></div>
+      </nav>
+    </div>
+
+    <div id="pivot">
+      <div id="content">
+ 
+	{{template "right" .}}
+	{{template "center" .}}
+
+      </div>
+    </div>
+
+    {{template "footer" .}}
+  </div>
+</body>
+{{end}}

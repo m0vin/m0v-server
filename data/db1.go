@@ -4,6 +4,7 @@ import (
 	sq "database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
+        "github.com/golang/glog"
 	//"golang.gurusys.co.uk/go-framework/sql"
 	"time"
 )
@@ -40,6 +41,340 @@ func GetDB() (*DB, error) {
 		return nil, err
 	}
 	return dbcon, nil
+}
+
+type Coordinate struct {
+        Latitude float32
+        Longitude float32
+        Altitude float32
+}
+
+type Packet struct {
+        Id int64 `json:"id!`
+        Timestamp time.Time `json:"timestamp,omitempty"`
+        Status bool `json:"status"`
+        Voltage float64 `json:"voltage"`
+        Frequency float64 `json:"freq"`
+        Lat float64 `json:"lat"`
+        Lng float64 `json:"lng"`
+}
+
+type Confo struct {
+        Id int64 `json:"id`
+        Devicename string `json:"devicename"`
+        Ssid string `json:"ssid"`
+        Hash int64 `json:"hash"`
+        //Created int64 `json:"created,omitempty"`
+        Created time.Time `json:"created,omitempty"`
+}
+
+type Pub struct {
+        Id int64 `json:"id"`
+        Latitude float32 `json:"latitude,omitempty"`
+        Longitude float32 `json:"longitude,omitempty"`
+        Altitude float32 `json:"altitude,omitempty"`
+        Orientation float32 `json:"orientation,omitempty"`
+        Hash int64 `json:"hash"`
+        Created time.Time `json:"created,omitempty"`
+}
+
+type WrappedCoordinate struct {
+        UserId int64
+        Id int64
+        Latitude float32
+        Longitude float32
+        Altitude float32
+        Timestamp string
+        Track string
+}
+
+type TrackRequest struct {
+	User int64
+	//Period *TimePeriod
+	Track  string
+}
+
+func PutPub(pub *Pub) (uint64, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return 0, err
+        }
+        // convert to timestamp
+        //created, err := time.Unix(confo.Created, 0).MarshalText()
+        created, err := pub.Created.MarshalText()
+	if err != nil {
+                glog.Error(err)
+		created, err = time.Now().MarshalText()
+	}
+        result, err := db.Exec("insert into pub (latitude, longitude, altitude, orientation, created_at, hash) values ($1, $2, $3, $4, $5, $6)", pub.Latitude, pub.Longitude, pub.Altitude, pub.Orientation, string(created), pub.Hash)
+        if err != nil {
+                glog.Error(err)
+                return 0 , err
+        }
+        rows, err := result.RowsAffected()
+        if rows != 1 {
+                glog.Error("expected to affect 1 row, affected %d", rows)
+                return uint64(rows) , err
+        }
+        return uint64(rows), nil
+}
+
+func GetPubByHash(hash int64) (*Pub, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select pub_id, created_at, latitude, longitude, hash from pub where hash=$1 order by created_at desc limit 1", hash)
+        if err != nil {
+                glog.Errorf("data.GetPubByHash %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        if !rows.Next() {
+                glog.Errorf("data.GetPubByHash %v \n", err)
+                return nil, fmt.Errorf("No data for hash: %d \n", hash)
+        }
+        pc := &Pub{}
+        err = rows.Scan(&pc.Id, &pc.Created, &pc.Latitude, &pc.Longitude, &pc.Hash)
+        if err != nil {
+                glog.Errorf("data.GetPubByHash %v \n", err)
+                return nil, err
+        }
+        return pc, nil
+}
+
+func GetPubs(limit int) ([]*Pub, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select pub_id, created_at, latitude, longitude, hash from pub order by created_at desc limit $1", limit)
+        if err != nil {
+                glog.Errorf("data.GetPubs %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        /*if !rows.Next() {
+                glog.Errorf("data.GetPubs no rows \n")
+                return nil, fmt.Errorf("No data for pub \n")
+        }*/
+        pbs := make([]*Pub, 0)
+        for rows.Next() {
+                pb := &Pub{}
+                if err := rows.Scan(&pb.Id, &pb.Created, &pb.Latitude, &pb.Longitude, &pb.Hash); err != nil {
+                        glog.Errorf("data.GetPubs %v \n", err)
+                        return pbs, fmt.Errorf("No data for pubs \n")
+                }
+                glog.Infof("data.GetPubs appending \n")
+                pbs = append(pbs, pb)
+        }
+        return pbs, nil
+}
+
+// PutConf inserts a recd. Conf in db. 
+func PutConfo(confo *Confo) (uint64, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return 0, err
+        }
+        // convert to timestamp
+        //created, err := time.Unix(confo.Created, 0).MarshalText()
+        created, err := confo.Created.MarshalText()
+	if err != nil {
+                glog.Error(err)
+		created, err = time.Now().MarshalText()
+	}
+        result, err := db.Exec("insert into confo (devicename, ssid, created_at, hash) values ($1, $2, $3, $4)", confo.Devicename, confo.Ssid, string(created), confo.Hash)
+        if err != nil {
+                glog.Error(err)
+                return 0 , err
+        }
+        rows, err := result.RowsAffected()
+        if rows != 1 {
+                glog.Error("expected to affect 1 row, affected %d", rows)
+                return uint64(rows) , err
+        }
+        return uint64(rows), nil
+}
+
+// GetLastConf retrieves the latest conf in db with supplied `ssid+devicename`. 
+// It returns a *Conf with matching `ssid+devicename` and latest timestamp or nil, error if none found
+func GetLastConfo(devicename, ssid string) (*Confo, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select devicename, ssid, created_at from confo where devicename=$1 and ssid=$2 order by created_at desc limit 1", devicename, ssid)
+        if err != nil {
+                glog.Errorf("data.GetLastConfo %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        if !rows.Next() {
+                glog.Errorf("data.GetLastConfo %v \n", err)
+                return nil, fmt.Errorf("No data for tuple: %s %s \n", devicename, ssid)
+        }
+        pc := &Confo{}
+        err = rows.Scan(&pc.Devicename, &pc.Ssid, &pc.Created)
+        if err != nil {
+                glog.Errorf("data.GetLastConfo %v \n", err)
+                return nil, err
+        }
+        return pc, nil
+}
+
+func GetLastConfoWithHash(hash int64) (*Confo, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select devicename, ssid, created_at from confo where hash=$1 order by created_at desc limit 1", hash)
+        if err != nil {
+                glog.Errorf("data.GetLastConfoWithHash %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        if !rows.Next() {
+                glog.Errorf("data.GetLastConfoWithHash %v \n", err)
+                return nil, fmt.Errorf("No data for : %d \n", hash)
+        }
+        pc := &Confo{}
+        err = rows.Scan(&pc.Devicename, &pc.Ssid, &pc.Created)
+        if err != nil {
+                glog.Errorf("data.GetLastConfoWithHash %v \n", err)
+                return nil, err
+        }
+        return pc, nil
+}
+
+// PutPacket inserts packet in db. It *should* check whether pub_id sent with packet is from the 'correct' pub. This could be a check against the location or a 'secret' decided during configuration with app which is sent along with each packet'
+func PutPacket(packet *Packet) (uint64, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return 0, err
+        }
+        result, err := db.Exec("insert into packet (pub_hash, voltage, frequency, protected) values ($1, $2, $3, $4)", packet.Id, packet.Voltage, packet.Frequency, packet.Status)
+        if err != nil {
+                glog.Error(err)
+                return 0 , err
+        }
+        rows, err := result.RowsAffected()
+        if rows != 1 {
+                glog.Error("expected to affect 1 row, affected %d", rows)
+                return uint64(rows) , err
+        }
+        return uint64(rows), nil
+}
+
+// GetPacket retrieves the latest packet in db with supplied `pub_hash`. 
+// Note: it returns a packet with `id` set to the serial of the reading rather than `pub_hash` since caller of function already has `pub_hash`
+func GetLastPacket(pubHash int64) (*Packet, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select id, created_at, voltage, frequency, protected from packet where pub_hash=$1 order by created_at desc limit 1", pubHash)
+        if err != nil {
+                glog.Errorf("data.GetLastPacket %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        if !rows.Next() {
+                glog.Errorf("data.GetLastPacket %v \n", err)
+                return nil, fmt.Errorf("No data for user: %d \n", pubHash)
+        }
+        pc := &Packet{Id: pubHash}
+        err = rows.Scan(&pc.Id, &pc.Timestamp, &pc.Voltage, &pc.Frequency, &pc.Status)
+        if err != nil {
+                glog.Errorf("data.GetLastPacket %v \n", err)
+                return nil, err
+        }
+        return pc, nil
+}
+
+// PutCoordinate
+func PutCoordinate(coord *WrappedCoordinate) (uint64, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return 0, err
+        }
+        //result, err := db.Exec("insert into coordinate (user_id, latitude, longitude, altitude, created_at) values ($1, $2, $3, $4, $5)", coord.UserId, coord.Latitude, coord.Longitude, coord.Altitude, coord.Timestamp)
+        result, err := db.Exec("insert into coordinate (user_id, latitude, longitude, altitude, track) values ($1, $2, $3, $4, $5)", coord.UserId, coord.Latitude, coord.Longitude, coord.Altitude, coord.Track)
+        if err != nil {
+                glog.Error(err)
+                return 0 , err
+        }
+        rows, err := result.RowsAffected()
+                if rows != 1 {
+                        glog.Error("expected to affect 1 row, affected %d", rows)
+                        return uint64(rows) , err
+                }
+        return uint64(rows), nil
+}
+
+func GetCoordinate(userid int64) (*WrappedCoordinate, error){
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select id, latitude, longitude, altitude from coordinate where user_id=$1 order by created_at desc limit 1", userid)
+        if err != nil {
+                glog.Errorf("data.GetCoordinate %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        if !rows.Next() {
+                glog.Errorf("data.GetCoordinate %v \n", err)
+                return nil, fmt.Errorf("No data for user: %d \n", userid)
+        }
+        wc := &WrappedCoordinate{UserId: userid}
+        err = rows.Scan(&wc.Id, &wc.Latitude, &wc.Longitude, &wc.Altitude)
+        if err != nil {
+                glog.Errorf("data.GetCoordinate %v \n", err)
+                return nil, err
+        }
+        return wc, nil
+}
+
+func GetTrack(tr *TrackRequest) ([]*Coordinate, error){
+        cs := make([]*Coordinate, 0)
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return cs, err
+        }
+        if tr.User == 0 || tr.Track == ""{
+                return nil, fmt.Errorf("Invalid user or track")
+        }
+        rows, err := db.Query("select latitude, longitude, altitude from coordinate where user_id=$1and track=$2 order by created_at asc", tr.User, tr.Track)
+        if err != nil {
+                glog.Errorf("data.GetCoordinate %v \n", err)
+                return cs, err
+        }
+        defer rows.Close()
+        if !rows.Next() {
+                glog.Errorf("data.GetCoordinate %v \n", err)
+                return cs, fmt.Errorf("No data for user, track: %d %s \n", tr.User, tr.Track)
+        }
+        for rows.Next() {
+                c := &Coordinate{}
+                if err := rows.Scan(&c.Latitude, &c.Longitude, &c.Altitude); err != nil {
+                        glog.Errorf("data.GetCoordinate %v \n", err)
+                        return cs, fmt.Errorf("No data for user: %d \n", tr.User)
+                }
+                cs = append(cs, c)
+        }
+        return cs, nil
 }
 
 type ChangeLog struct {

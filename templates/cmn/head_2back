@@ -1,0 +1,12 @@
+{{define "head"}}
+<head>
+  <link rel="stylesheet" type="text/css" href="../../static/css/markup.css">
+  <link rel="stylesheet" type="text/css" href="../../static/css/colorbox.css">
+  <link rel="stylesheet" type="text/css" href="../../static/css/jquery.stepper.min.css">
+  <link rel="stylesheet" type="text/css" href="../../static/css/jquery-ui-1.8.16.custom.css" />
+  <title>
+	M0V Leaderboard
+  </title>
+  </script>
+</head>
+{{end}}

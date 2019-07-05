@@ -1,0 +1,20 @@
+{{define "pubs_admin"}}
+
+<table class="table"><th>Id</th><th>Lat</th><th>Lng</th><th>Alt</th><th>Created</th><th>Status</th><th>Packets</th>
+	<tbody>
+	{{range .Pubs}}
+		<tr>
+			<td>  {{.Id}} </td>
+			<td> {{.Hash}} </td>
+			<td>  {{.Latitude}} </td>
+			<td> {{.Longitude}} </td>
+			<td> {{.Created}} </td>
+			<td> OK </td>
+			<td> <a href="/admin/packets/{{.Hash}}"> View </a> </td>
+		</tr>
+	{{end}}
+	</tbody>
+</table>
+<p> {{.Message}}</p>
+{{end}}
+
