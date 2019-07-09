@@ -78,6 +78,14 @@ type Pub struct {
         Created time.Time `json:"created,omitempty"`
 }
 
+type Sub struct {
+        Id int64 `json:"id"`
+        Email string `json:"email"`
+        Name string `json:"name"`
+        Phone string `json:"phone"`
+        Created time.Time `json:"created,omitempty"`
+}
+
 type WrappedCoordinate struct {
         UserId int64
         Id int64
@@ -169,6 +177,86 @@ func GetPubs(limit int) ([]*Pub, error) {
                         return pbs, fmt.Errorf("No data for pubs \n")
                 }
                 glog.Infof("data.GetPubs appending \n")
+                pbs = append(pbs, pb)
+        }
+        return pbs, nil
+}
+
+func PutSub(sub *Sub) (uint64, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return 0, err
+        }
+        // convert to timestamp
+        //created, err := time.Unix(confo.Created, 0).MarshalText()
+        created, err := sub.Created.MarshalText()
+	if err != nil {
+                glog.Error(err)
+		created, err = time.Now().MarshalText()
+	}
+        result, err := db.Exec("insert into sub (email, phone, name, created_at) values ($1, $2, $3, $4)", sub.Email, sub.Phone, sub.Name, string(created))
+        if err != nil {
+                glog.Error(err)
+                return 0 , err
+        }
+        rows, err := result.RowsAffected()
+        if rows != 1 {
+                glog.Error("expected to affect 1 row, affected %d", rows)
+                return uint64(rows) , err
+        }
+        return uint64(rows), nil
+}
+
+func GetSubByEmail(email string) (*Sub, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select sub_id, created_at, email, name, phone from sub where email=$1 order by created_at desc limit 1", email)
+        if err != nil {
+                glog.Errorf("data.GetSubByEmail %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        if !rows.Next() {
+                glog.Errorf("data.GetSubByEmail %v \n", err)
+                return nil, fmt.Errorf("No data for email: %s \n", email)
+        }
+        pc := &Sub{}
+        err = rows.Scan(&pc.Id, &pc.Created, &pc.Email, &pc.Name, &pc.Phone)
+        if err != nil {
+                glog.Errorf("data.GetSubByEmail %v \n", err)
+                return nil, err
+        }
+        return pc, nil
+}
+
+func GetSubs(limit int) ([]*Sub, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select sub_id, created_at, email, name, phone from sub order by created_at desc limit $1", limit)
+        if err != nil {
+                glog.Errorf("data.GetSubs %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        /*if !rows.Next() {
+                glog.Errorf("data.GetPubs no rows \n")
+                return nil, fmt.Errorf("No data for pub \n")
+        }*/
+        pbs := make([]*Sub, 0)
+        for rows.Next() {
+                pb := &Sub{}
+                if err := rows.Scan(&pb.Id, &pb.Created, &pb.Email, &pb.Name, &pb.Phone); err != nil {
+                        glog.Errorf("data.GetSubs %v \n", err)
+                        return pbs, fmt.Errorf("No data for subs \n")
+                }
+                glog.Infof("data.GetSubs appending \n")
                 pbs = append(pbs, pb)
         }
         return pbs, nil
