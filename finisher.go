@@ -64,8 +64,9 @@ var (
         stag1 = "https://acme-staging.api.letsencrypt.org/directory"
         // templates
 	tmpl_adm_err = template.Must(template.ParseFiles("templates/adm/error", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head", "templates/cmn/menu", "templates/cmn/footer"))
-	tmpl_adm_pbs_lst = template.Must(template.ParseFiles("templates/adm/pubs_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head", "templates/cmn/menu", "templates/cmn/footer"))
-	tmpl_adm_sbs_lst = template.Must(template.ParseFiles("templates/adm/subs_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_pbs_lst = template.Must(template.ParseFiles("templates/adm/pubs_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_pubs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_sbs_lst = template.Must(template.ParseFiles("templates/adm/subs_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_sbs_new = template.Must(template.ParseFiles("templates/adm/subs_new", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pck_lst = template.Must(template.ParseFiles("templates/adm/pcks_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
         dflt_ctgrs = []Category{Category{Name: "GridWatch", }, Category{Name: "Leaderboard"}}
 )
@@ -238,7 +239,7 @@ func startHttps() {
                 }
                 return
         }))
-        mux.Handle("/admin/subs", http.HandlerFunc(handleSubs))
+        mux.Handle("/admin/subs/", http.HandlerFunc(handleSubs))
         mux.Handle("/admin/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
                 //pbs := make([]*data.Pub, 0)
                 //render := Render {"Pubs", pbs, dflt_ctgrs}

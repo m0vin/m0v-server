@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS sub (
 	email VARCHAR(64),
 	phone VARCHAR(32),
 	name VARCHAR(32),
+	pswd VARCHAR(16),
 	created_at TIMESTAMPTZ default current_timestamp
 );
 

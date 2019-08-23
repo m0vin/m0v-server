@@ -83,6 +83,7 @@ type Sub struct {
         Email string `json:"email"`
         Name string `json:"name"`
         Phone string `json:"phone"`
+        Pswd string `json:"pswd"`
         Created time.Time `json:"created,omitempty"`
 }
 
@@ -191,11 +192,11 @@ func PutSub(sub *Sub) (uint64, error) {
         // convert to timestamp
         //created, err := time.Unix(confo.Created, 0).MarshalText()
         created, err := sub.Created.MarshalText()
-	if err != nil {
+	if err != nil || sub.Created.Before(time.Date(2000,1,1,1,1,1,1,time.UTC)) {
                 glog.Error(err)
 		created, err = time.Now().MarshalText()
 	}
-        result, err := db.Exec("insert into sub (email, phone, name, created_at) values ($1, $2, $3, $4)", sub.Email, sub.Phone, sub.Name, string(created))
+        result, err := db.Exec("insert into sub (email, phone, name, pswd, created_at) values ($1, $2, $3, $4, $5)", sub.Email, sub.Phone, sub.Name, sub.Pswd, string(created))
         if err != nil {
                 glog.Error(err)
                 return 0 , err

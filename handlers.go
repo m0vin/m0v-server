@@ -8,6 +8,7 @@ import (
 )
 
 func handleSubs(w http.ResponseWriter, r *http.Request) {
+        glog.Infof("handleSubs %s \n", r.Method)
         switch r.Method{
         case "GET":
                 toks := strings.Split(r.URL.Path, "/")
@@ -16,6 +17,16 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                         render := Render {Message: "Nothing to see here", Categories: dflt_ctgrs}
                         _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
                         return
+                }
+                if toks[2] == "new" {
+                        render := Render {Message: "Subs", Categories: dflt_ctgrs}
+                        err := tmpl_adm_sbs_new.ExecuteTemplate(w, "base", render)
+                        if err != nil {
+                                glog.Errorf("Https %v \n", err)
+                                render = Render{Message: "Render error", Categories: dflt_ctgrs}
+                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                return
+                        }
                 }
                 pk, err := data.GetSubs(10)
                 if err != nil {
@@ -45,7 +56,14 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                 n := v.Get("name")
                 e := v.Get("email")
                 p := v.Get("phone")
-                _, err = data.PutSub(&data.Sub{Email:e, Name:n, Phone:p})
+                pw := v.Get("pswd")
+                if s, err := data.GetSubByEmail(e); s != nil {
+                        glog.Errorf("handlesubs post putsubs %v \n", err)
+                        render := Render{Message: "Sub email exists", Categories: dflt_ctgrs}
+                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                        return
+                }
+                _, err = data.PutSub(&data.Sub{Email:e, Name:n, Phone:p, Pswd:pw})
                 if err != nil {
                         glog.Errorf("handlesubs post putsubs %v \n", err)
                         render := Render{Message: "Couldn't create Sub", Categories: dflt_ctgrs}
