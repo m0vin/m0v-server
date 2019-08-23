@@ -1,0 +1,119 @@
+{{define "subs_admin"}}
+<h2>Subscriber</h2>
+<section class="standart">
+  <div class="form-inline">
+    <form id="userchange" name="userchange">
+      <table>
+	<tr>
+	  <td><h2>Your Personal Details</h2></td>
+	  <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	  <td><h2>Your Address</h2></td>
+	</tr>
+	<tr>
+	    <td>
+	      <div class="field">
+	       <label> First Name:</label>
+               <!--FIRSTNAME-->
+	      </div>
+	    </td>
+	    <td>&nbsp;&nbsp;</td>
+	    <td>
+	      <div class="field">
+		<label>Company (Individuals leave blank):</label>
+		 <!--COMPANY-->
+	      </div>
+	    </td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	    <label> Last Name:</label>
+               <!--LASTNAME-->
+	    </div></td>
+	    <td>&nbsp;&nbsp;</td>
+	    <td><div class="field">
+		<label><span class="required">*</span> Address:</label>
+               <!--ADDRESS-->
+	    </div></td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label> E-Mail:</label>
+              <!--EMAIL-->
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
+	      <label><span class="required">*</span> City:</label>
+              <!--CITY-->
+	  </div></td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label><span class="required">*</span> Phone:</label>
+               <!--PHONE-->
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
+	      <label><span class="required" id="postcode-required" style="display: none;">*</span> Post Code:</label>
+              <!--POSTCODE-->
+	  </div></td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label>Customer Type</label>
+	      <select name="indi">
+                <!--INDI-->
+	      </select>
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
+	    <label><span class="required">*</span> State:</label>
+            <!--STATE-->
+	  </div></td>
+	</tr>
+	<div id="company-id-display" class="field" style="display: none;">
+	    <label><span class="required" id="company-id-required" style="display: none;">*</span> Company ID:</label>
+	    <input type="text" value="" name="company_id">
+	</div>
+	<div id="tax-id-display" class="field" style="display: none;">
+	    <label><span class="required" id="tax-id-required">*</span> Tax ID:</label>
+	    <input type="text" value="" name="tax_id">
+	</div>
+	<tr>
+	  <td>
+	    <h2>Change Password</h2>
+	    <div class="field">
+	      <label><span class="required">*</span>Old Password:</label>
+	      <input type="password" value="" name="old_password">
+	    </div>
+	    <div class="field">
+	      <label><span class="required">*</span>New Password:</label>
+	      <input type="password" value="" name="password">
+	    </div>
+	    <div class="field">
+	      <label><span class="required">*</span>New Password Confirm:</label>
+	      <input type="password" value="" name="confirm">
+	    </div>
+	  </td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td>
+	    <h2>Preferred Payment Method</h2>
+	    <div class="field">
+	      <label></label>
+              <!--PMTMETHOD-->
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	   <td> I have read and agree to the <a alt="Privacy Policy" href="/info/privacy" class="colorbox cboxElement"><b>Privacy Policy</b></a> 
+	    <input type="checkbox" value="1" name="agree">
+	  </td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
+	    <a onclick="$(this).parents('form').submit();" class="button button-alt" >Amend Details</a> </div></td>
+	  <td>
+	</tr>
+      </table> 
+    </form>
+  </div>
+</section>
+{{end}}
