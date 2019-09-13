@@ -4,12 +4,10 @@
 	  <section class="content">
 	    <h2>Account</h2>
 	    <ul class="list">
-	      <li><a href="/admin/goods/entry">New Good</a> 
-	      <li><a href="/admin/goods">List Goods</a></li>
-	      <li><a href="/admin/goods/upload">Upload Goods</a></li>
-	      <li><a href="/admin/accounts">List Accounts</a></li>
-	      <li><a href="/admin/accounts/upload">Upload Accounts</a></li>
-	      <li><a href="/admin/orders">List Orders</a></li>
+	      <li><a href="/subs/you">You</a> 
+	      <li><a href="/subs/pubs">Yours</a> 
+	      <li><a href="/subs/faults">Faults</a></li>
+	      <li><a href="/subs/others">Of Interest</a></li>
             </ul>
 	  </section> 
 	</aside>

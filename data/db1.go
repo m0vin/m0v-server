@@ -183,6 +183,35 @@ func GetPubs(limit int) ([]*Pub, error) {
         return pbs, nil
 }
 
+func GetPubsForSub(email string) ([]*Pub, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select pub.pub_id, created_at, latitude, longitude, hash from pub inner join subpub on subpub.pub_id = pub.pub_id order by created_at desc limit $1", 10)
+        if err != nil {
+                glog.Errorf("data.GetPubs %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        /*if !rows.Next() {
+                glog.Errorf("data.GetPubs no rows \n")
+                return nil, fmt.Errorf("No data for pub \n")
+        }*/
+        pbs := make([]*Pub, 0)
+        for rows.Next() {
+                pb := &Pub{}
+                if err := rows.Scan(&pb.Id, &pb.Created, &pb.Latitude, &pb.Longitude, &pb.Hash); err != nil {
+                        glog.Errorf("data.GetPubs %v \n", err)
+                        return pbs, fmt.Errorf("No data for pubs \n")
+                }
+                glog.Infof("data.GetPubs appending \n")
+                pbs = append(pbs, pb)
+        }
+        return pbs, nil
+}
+
 func PutSub(sub *Sub) (uint64, error) {
         db, err := GetDB()
         if err != nil {
@@ -232,6 +261,34 @@ func GetSubByEmail(email string) (*Sub, error) {
                 return nil, err
         }
         return pc, nil
+}
+
+func CheckPswd(email string, pswd string) bool {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return false
+        }
+        rows, err := db.Query("select sub_id, email, pswd from sub where email=$1 order by created_at desc limit 1", email)
+        if err != nil {
+                glog.Errorf("data.CheckPswd %v \n", err)
+                return false
+        }
+        defer rows.Close()
+        if !rows.Next() {
+                glog.Errorf("data.CheckPswd %v \n", err)
+                return false
+        }
+        pc := &Sub{}
+        err = rows.Scan(&pc.Id, &pc.Email, &pc.Pswd)
+        if err != nil {
+                glog.Errorf("data.CheckPswd %v \n", err)
+                return false
+        }
+        if pc.Pswd != pswd {
+                return false
+        }
+        return true
 }
 
 func GetSubs(limit int) ([]*Sub, error) {

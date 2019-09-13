@@ -34,6 +34,13 @@ type Render struct { //for most purposes
         Categories []Category `json:"categories,string"`
 }
 
+type RenderOne struct { //for most purposes
+        Message string `json:"message"`
+        Sub *data.Sub `json:"subs,string"`
+        Pub *data.Pub `json:"pubs,string"`
+        Categories []Category `json:"categories,string"`
+}
+
 type Render1 struct { //for packets
         Message string `json:"message"`
         //Sub sub `json:"sub"`
@@ -63,10 +70,12 @@ var (
         stag2 = "https://acme-staging-v02.api.letsencrypt.org/directory"
         stag1 = "https://acme-staging.api.letsencrypt.org/directory"
         // templates
-	tmpl_adm_err = template.Must(template.ParseFiles("templates/adm/error", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_err = template.Must(template.ParseFiles("templates/adm/error", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_errs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pbs_lst = template.Must(template.ParseFiles("templates/adm/pubs_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_pubs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_sbs_lst = template.Must(template.ParseFiles("templates/adm/subs_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_sbs_new = template.Must(template.ParseFiles("templates/adm/subs_new", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_sbs_you = template.Must(template.ParseFiles("templates/adm/subs_you", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_sbs_lin = template.Must(template.ParseFiles("templates/adm/subs_login", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pck_lst = template.Must(template.ParseFiles("templates/adm/pcks_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
         dflt_ctgrs = []Category{Category{Name: "GridWatch", }, Category{Name: "Leaderboard"}}
 )
@@ -239,7 +248,10 @@ func startHttps() {
                 }
                 return
         }))
-        mux.Handle("/admin/subs/", http.HandlerFunc(handleSubs))
+        mux.Handle("/api/", http.HandlerFunc(handleAPI))
+        mux.Handle("/subs/", http.HandlerFunc(handleSubs))
+        mux.Handle("/pubs/", http.HandlerFunc(handlePubs))
+        mux.Handle("/admin/subs/", http.HandlerFunc(handleAdmin))
         mux.Handle("/admin/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
                 //pbs := make([]*data.Pub, 0)
                 //render := Render {"Pubs", pbs, dflt_ctgrs}
@@ -260,11 +272,7 @@ func startHttps() {
                 }
                 return
         }))
-        mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-                tlsoks.Add(1)
-                fmt.Printf("Secure visitor %s %v \n", r.RemoteAddr, *tlsoks)
-                fmt.Fprintf(w, "Secure but nothing to see here \n")
-        }))
+        mux.Handle("/", http.HandlerFunc(handleRoot))
         hs := http.Server{
                 ReadTimeout: time.Duration(httpRto) * time.Second,
                 WriteTimeout: time.Duration(httpWto) * time.Second,
@@ -286,7 +294,12 @@ func RedirectHttp(w http.ResponseWriter, r *http.Request) {
         u := r.URL
         u.Host = r.Host
         u.Scheme = "https"
-        http.Redirect(w, r, u.String(), 302)
+        switch r.Method {
+        case "GET":
+                http.Redirect(w, r, u.String(), 302)
+        case "POST":
+                http.Redirect(w, r, u.String(), 307)
+        }
 }
 
 func GetKey(path string) (*ecdsa.PrivateKey, error) {

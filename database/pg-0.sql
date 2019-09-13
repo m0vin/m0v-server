@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS sub;
 DROP TABLE IF EXISTS packet;
 DROP TABLE IF EXISTS confo;
 DROP TABLE IF EXISTS pub;
+DROP TABLE IF EXISTS config;
 
 CREATE TABLE IF NOT EXISTS pub (
 	pub_id SERIAL PRIMARY KEY,
@@ -12,6 +13,19 @@ CREATE TABLE IF NOT EXISTS pub (
 	orientation REAL NOT NULL,
 	hash INTEGER NOT NULL UNIQUE,
 	creator INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS config (
+	pub_hash INTEGER NOT NULL REFERENCES pub(hash),
+	id SERIAL PRIMARY KEY,
+	nickname VARCHAR(16),
+	power_peak REAL,
+	modules VARCHAR(16),
+	inverter VARCHAR(16),
+	power_last REAL,
+	kwh_hour REAL,
+	kwh_day REAL,
+	kwh_life REAL
 );
 
 CREATE TABLE IF NOT EXISTS sub (

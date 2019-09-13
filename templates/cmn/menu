@@ -1,0 +1,16 @@
+{{define "menu"}}
+	{{range .Categories}}
+	  <li>
+            <!--CATEGORY LINK-->
+		<a href="/pubs/{{ .Name }}">{{ .Name }}</a>
+	    <div class="sub-arrow"></div>
+	    <div class="sub-content">
+	      <div class="sub-body">
+		<ul>
+                  <!--SUBCATEGORIES LINKS-->
+		</ul>
+	      </div>
+	    </div>
+	  </li>
+	{{ end }} 
+{{end}}

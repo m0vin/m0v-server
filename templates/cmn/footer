@@ -1,0 +1,70 @@
+{{define "footer"}}
+    <div class="ribbon custom-footer">
+      <div class="top"></div>
+      <div class="pivot">
+	<ul class="center">
+	  <li class="cell">
+	    <p>
+	      <span id="cke_bm_55S" style="display: none;">&nbsp;</span><span style="display: none;">&nbsp;</span></p>
+	      <h3> Your Trusted Monitor </h3>
+	    <p>
+	    <span style="font-family:tahoma,geneva,sans-serif;">M0V provides status monitoring of distributed networks. It was initially developed to monitor distributed PV systems. </span></p>
+	    <p>
+	    <p>
+	    <span style="display: none;">&nbsp;</span><span id="cke_bm_55E" style="display: none;">&nbsp;</span></p>
+	  </li>
+	  <li class="cell">
+	    <div class="social_fix">&nbsp;</div>
+	    <div class="social">
+	      <!-- <a href="http://www.bitcoin.org" title="Bitcoin" >
+                <img src="../images/BC_nBG_64px.png"></a> -->
+	      <a href="http://www.citruspay.com" title="Citruspay" >
+                <img src="/images/logo_citrus.png"></a>
+	    </div>
+	  </li>
+	</ul>
+      </div>
+    </div>
+
+    <div class="pivot" style="background-color: #FFFFFF;">
+      <footer>
+	<div class="column first">
+	  <h3>Information</h3>
+	  <ul>
+	    <li><a href="/info/about">About</a></li>
+	    <li><a href="/info/privacy">Privacy Policy</a></li>
+	    <li><a href="/info/terms">Terms &amp; Conditions</a></li>
+	  </ul>
+	</div>
+	<div class="column">
+	  <h3>Customer Service</h3>
+	  <ul>
+	    <li><a href="/info/contact">Contact Us</a></li>
+	    <li><a href="/info/news">Latest News</a></li>
+	    <li><a href="/info/site">Site Map</a></li>
+	  </ul>
+	</div>
+	<div class="column">
+	  <h3>Extras</h3>
+	  <ul>
+	    <li><a href="/info/connect">Connect</a></li>
+	    <li><a href="/info/provision">Provision</a></li>
+	    <li><a href="/info/contribute">Contribute</a></li>
+	  </ul>
+	</div>
+	<div class="column last">
+	  <h3>My Account</h3>
+	  <ul>
+	    <li><a href="/subs/">My Account</a></li>
+	    <li><a href="/subs/devices">Devices</a></li>
+	    <li><a href="/subs/faults">Faults</a></li>
+	  </ul>
+	</div>
+      </footer>
+      <div id="copyright">
+	<div class="float-right"> LLP ID: AAB-5532 GSTIN: 29AAXFM4203C1Z8 </div>
+          Copyright &#169; 2013 Madowatt Solar LLP. All Rights Reserved.
+	<div class="clear"></div>
+      </div>
+    </div> 
+{{end}}

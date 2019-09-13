@@ -1,0 +1,81 @@
+{{define "subs_admin"}}
+<h2>Subscriber</h2>
+<section class="standart">
+  <div class="form-inline">
+    <form action="https://b00m.in/subs/you/" method="post" enctype="application/x-www-form-urlencoded" id="useredit" name="useredit"> 
+      <table>
+	<tr>
+	    <td>
+	      <div class="field">
+	       <label> Name:</label>
+	      </div>
+	    </td>
+	    <td>&nbsp;&nbsp;</td>
+	    <td>
+	      <div class="field">
+			{{.Sub.Name}}
+	      </div>
+	    </td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label> E-Mail:</label>
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field"> {{.Sub.Email}}
+	  </div></td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label> Phone:</label>
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field"> {{.Sub.Phone}}
+	  </div></td>
+	</tr>
+	<div id="company-id-display" class="field" style="display: none;">
+	    <label><span class="required" id="company-id-required" style="display: none;">*</span> Company ID:</label>
+	    <input type="text" value="" name="company_id">
+	</div>
+	<div id="tax-id-display" class="field" style="display: none;">
+	    <label><span class="required" id="tax-id-required">*</span> Tax ID:</label>
+	    <input type="text" value="" name="tax_id">
+	</div>
+	<tr>
+	  <td>
+	    <h2>Change Password</h2>
+	    <div class="field">
+	      <label><span class="required">*</span>Old Password:</label>
+	      <input type="password" value="" name="old_password">
+	    </div>
+	    <div class="field">
+	      <label><span class="required">*</span>New Password:</label>
+	      <input type="password" value="" name="password">
+	    </div>
+	    <div class="field">
+	      <label><span class="required">*</span>New Password Confirm:</label>
+	      <input type="password" value="" name="confirm">
+	    </div>
+	  </td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td>
+	    <div class="field">
+	      <label></label>
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	   <td> I have read and agree to the <a alt="Privacy Policy" href="/info/privacy" class="colorbox cboxElement"><b>Privacy Policy</b></a> 
+	    <input type="checkbox" value="1" name="agree">
+	  </td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
+	    <input type="submit" class="button button-alt" value="Amend"/></div></td>
+	  <td>
+	</tr>
+      </table> 
+    </form>
+  </div>
+</section>
+{{end}}
+
