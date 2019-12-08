@@ -4,7 +4,7 @@
 	<tbody>
 	{{range .Pubs}}
 		<tr>
-			<td>  {{.Id}} </td>
+			<td> <a href="/admin/pubs/{{.Id}}"> {{.Id}} </a> </td>
 			<td> {{.Hash}} </td>
 			<td>  {{.Latitude}} </td>
 			<td> {{.Longitude}} </td>

@@ -162,28 +162,54 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                 return
                         }
                 case "pubs":
-                        if sub == "" {
-                                glog.Infof("handlesubs get pubs no cookie \n")
-                                render := Render {Message: "Login", Categories: dflt_ctgrs}
-                                err := tmpl_adm_sbs_lin.ExecuteTemplate(w, "base", render)
-                                if err != nil {
-                                        glog.Errorf("Https %v \n", err)
-                                        render = Render{Message: "Render error", Categories: dflt_ctgrs}
-                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                        if len(toks) == 3 {
+                                if sub == "" {
+                                        glog.Infof("handlesubs get pubs no cookie \n")
+                                        render := Render {Message: "Login", Categories: dflt_ctgrs}
+                                        err := tmpl_adm_sbs_lin.ExecuteTemplate(w, "base", render)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                render = Render{Message: "Render error", Categories: dflt_ctgrs}
+                                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                                return
+                                        }
+                                        return
+                                } else {
+                                        glog.Infof("handlesubs get pubs %s : %d \n", sub, you.Id)
+                                        pubs, err := data.GetPubsForSub(you.Id)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                render := Render{Message: "No pubs for you", Categories: dflt_ctgrs}
+                                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                                return
+                                        }
+                                        render := Render {Message: "Yours", Pubs: pubs, Categories: dflt_ctgrs}
+                                        err = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := Render{Message: "Render error", Categories: dflt_ctgrs}
+                                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
                                         return
                                 }
-                                return
                         } else {
-                                glog.Infof("handlesubs get pubs %s \n", sub)
-                                pubs, err := data.GetPubsForSub(sub)
+                                id, err := strconv.ParseInt(toks[3], 10, 64)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                pub, err := data.GetPubById(id)
                                 if err != nil {
                                         glog.Errorf("Https %v \n", err)
                                         render := Render{Message: "No pubs for you", Categories: dflt_ctgrs}
                                         _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
                                         return
                                 }
-                                render := Render {Message: "You", Pubs: pubs, Categories: dflt_ctgrs}
-                                err = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                                render := RenderOne{Message: "Pub Details", Pub: pub, Categories: dflt_ctgrs}
+                                err = tmpl_adm_pbs_dee.ExecuteTemplate(w, "base", render)
                                 if err != nil {
                                         glog.Errorf("Https %v \n", err)
                                         rendere := Render{Message: "Render error", Categories: dflt_ctgrs}
@@ -419,6 +445,48 @@ func handleAPI(w http.ResponseWriter, r *http.Request) {
                         return
                 }
                 switch toks[2] {
+                case "register":
+                        //if sub == "" {
+                                glog.Infof("handleApi post api/register w/o sub \n")
+                                v := r.Form
+                                fn := v.Get("fullname")
+                                e := v.Get("email")
+                                pw := v.Get("pswd")
+                                ph := v.Get("phone")
+                                cc := v.Get("confirm")
+                                s, err := data.GetSubByEmail(e)
+                                if s != nil || err == nil {
+                                        glog.Errorf("handleApi post register s: %s err: %v \n", e, err)
+                                        w.WriteHeader(http.StatusConflict)
+                                        io.WriteString(w, "Email already registered")
+                                        return
+                                }
+                                if pw != cc {
+                                        glog.Errorf("handleApi post register %s == %s \n", cc, pw)
+                                        w.WriteHeader(http.StatusConflict)
+                                        io.WriteString(w, "Password mismatch")
+                                        return
+                                }
+                                // success
+                                //glog.Infof("handleApi post login success %s \n", e)
+                                //http.SetCookie(w, &http.Cookie{Name: "sub", Value: e, Domain:"b00m.in", Path: "/", MaxAge: 300, HttpOnly: true, Expires: time.Now().Add(time.Second * 120)})
+                                glog.Infof("handleapi post register %s \n", e)
+                                i, err := data.PutSub(&data.Sub{Email:e, Name:fn, Phone:ph, Pswd:pw})
+                                if err != nil {
+                                        glog.Infof("handleapi post register %s %v \n", e, err)
+                                        w.WriteHeader(http.StatusServiceUnavailable)
+                                        io.WriteString(w, "Sorry couldn't register")
+                                        return
+                                }
+                                w.WriteHeader(http.StatusOK)
+                                io.WriteString(w, "Registered " + strconv.Itoa(int(i)))
+                                return
+                        /*} else {
+                                glog.Infof("handlesubs post sub/lin w/ %s \n", sub)
+                                render := Render{Message: "Already " + sub, Categories: dflt_ctgrs}
+                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                return
+                        }*/
                 case "login":
                         //if sub == "" {
                                 glog.Infof("handleApi post api/login w/o sub \n")

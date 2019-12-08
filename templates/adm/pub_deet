@@ -1,0 +1,60 @@
+{{define "pubs_deet"}}
+<h2>Device/Site</h2>
+<section class="standart">
+    <div class="form-inline">
+      <form action="https://b00m.in/pubs/{{.Pub.Id}}" method="post" enctype="application/x-www-form-urlencoded" id="useredit" name="useredit"> 
+      <table>
+	<tr>
+	    <td>
+	      <div class="field">
+	       <label> Name:</label>
+	      </div>
+	    </td>
+	    <td>&nbsp;&nbsp;</td>
+	    <td>
+	      <div class="field">
+			{{.Pub.Name}}
+	      </div>
+	    </td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label> Type:</label>
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field"> Photovoltaic
+	  </div></td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label> Latitude:</label>
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field"> {{.Pub.Latitude}}
+	  </div></td>
+	</tr>
+	<tr>
+	  <td>
+	    <div class="field">
+	      <label> Longitude: </label>
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field"> {{.Pub.Longitude}}
+	  </div></td>
+	</tr>
+	<tr>
+	   <td> I have read and agree to the <a alt="Privacy Policy" href="/info/privacy" class="colorbox cboxElement"><b>Privacy Policy</b></a> 
+	    <input type="checkbox" value="1" name="agree">
+	  </td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
+	    <input type="submit" class="button button-alt" value="Amend"/></div></td>
+	  <td>
+	</tr>
+      </table> 
+      </form>
+    </div>
+</section>
+{{end}}
+
+
