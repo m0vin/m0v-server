@@ -208,7 +208,14 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                         _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
                                         return
                                 }
-                                render := RenderOne{Message: "Pub Details", Pub: pub, Categories: dflt_ctgrs}
+                                devicename,err := data.GetPubDeviceName(pub.Hash)
+                                var render RenderOne
+                                if err != nil {
+                                        glog.Errorf("Https handle subs/pubs/%d : %v \n", id, err)
+                                        render = RenderOne{Message: "Unknown", Pub: pub, Categories: dflt_ctgrs}
+                                } else {
+                                        render = RenderOne{Message: devicename, Pub: pub, Categories: dflt_ctgrs}
+                                }
                                 err = tmpl_adm_pbs_dee.ExecuteTemplate(w, "base", render)
                                 if err != nil {
                                         glog.Errorf("Https %v \n", err)

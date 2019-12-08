@@ -175,13 +175,13 @@ func GetPubByHash(hash int64) (*Pub, error) {
         return pc, nil
 }
 
-func GetPubById(id int64) (*Pub, error) {
+func GetPubById(pub_id int64) (*Pub, error) {
         db, err := GetDB()
         if err != nil {
                 glog.Error(err)
                 return nil, err
         }
-        rows, err := db.Query("select pub_id, created_at, latitude, longitude from pub where hash=$1 order by created_at desc limit 1", id)
+        rows, err := db.Query("select pub_id, created_at, latitude, longitude, hash from pub where pub_id=$1 order by created_at desc limit 1", pub_id)
         if err != nil {
                 glog.Errorf("data.GetPubByHash %v \n", err)
                 return nil, err
@@ -189,10 +189,10 @@ func GetPubById(id int64) (*Pub, error) {
         defer rows.Close()
         if !rows.Next() {
                 glog.Errorf("data.GetPubByHash %v \n", err)
-                return nil, fmt.Errorf("No data for id: %d \n", id)
+                return nil, fmt.Errorf("No data for id: %d \n", pub_id)
         }
         pc := &Pub{}
-        err = rows.Scan(&pc.Id, &pc.Created, &pc.Latitude, &pc.Longitude)
+        err = rows.Scan(&pc.Id, &pc.Created, &pc.Latitude, &pc.Longitude, &pc.Hash)
         if err != nil {
                 glog.Errorf("data.GetPubByHash %v \n", err)
                 return nil, err

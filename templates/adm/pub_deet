@@ -1,4 +1,4 @@
-{{define "pubs_deet"}}
+{{define "pubs_admin"}}
 <h2>Device/Site</h2>
 <section class="standart">
     <div class="form-inline">
@@ -13,7 +13,7 @@
 	    <td>&nbsp;&nbsp;</td>
 	    <td>
 	      <div class="field">
-			{{.Pub.Name}}
+			{{.Message}}
 	      </div>
 	    </td>
 	</tr>
