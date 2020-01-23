@@ -36,15 +36,23 @@ type Render struct { //for most purposes
 
 type RenderOne struct { //for most purposes
         Message string `json:"message"`
-        Sub *data.Sub `json:"subs,string"`
-        Pub *data.Pub `json:"pubs,string"`
+        Sub *data.Sub `json:"sub,string"`
+        Pub *data.Pub `json:"pub,string"`
+        PubConfig *data.PubConfig `json:"pubconfig,string"`
         Categories []Category `json:"categories,string"`
 }
 
-type Render1 struct { //for packets
+type Render1 struct { //for a packet
         Message string `json:"message"`
         //Sub sub `json:"sub"`
         Packet *data.Packet `json:"packet,string"`
+        Categories []Category `json:"categories,string"`
+}
+
+type Rendern struct { //for packets
+        Message string `json:"message"`
+        //Sub sub `json:"sub"`
+        Packets []*data.Packet `json:"packet,string"`
         Categories []Category `json:"categories,string"`
 }
 
@@ -78,6 +86,7 @@ var (
 	tmpl_adm_pbs_dee = template.Must(template.ParseFiles("templates/adm/pub_deet", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_pubs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_sbs_lin = template.Must(template.ParseFiles("templates/adm/subs_login", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pck_lst = template.Must(template.ParseFiles("templates/adm/pcks_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_pck_one = template.Must(template.ParseFiles("templates/adm/pcks_one", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
         dflt_ctgrs = []Category{Category{Name: "GridWatch", }, Category{Name: "Leaderboard"}}
 )
 
@@ -238,11 +247,11 @@ func startHttps() {
                 if err != nil {
                         glog.Infof("Https %v \n", err)
                         render := Render1 {"Packets", &data.Packet{}, dflt_ctgrs}
-                        _ = tmpl_adm_pck_lst.ExecuteTemplate(w, "base", render)
+                        _ = tmpl_adm_pck_one.ExecuteTemplate(w, "base", render)
                         return
                 }
                 render := Render1 {"Packets", pk, dflt_ctgrs}
-                err = tmpl_adm_pck_lst.ExecuteTemplate(w, "base", render)
+                err = tmpl_adm_pck_one.ExecuteTemplate(w, "base", render)
                 if err != nil {
                         fmt.Printf("Https %v \n", err)
                         return

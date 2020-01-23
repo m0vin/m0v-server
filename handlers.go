@@ -105,13 +105,20 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
         switch r.Method{
         case "GET":
                 toks := strings.Split(r.URL.Path, "/")
-                glog.Infof("handleSubs %s %v \n", r.Method, toks)
+                glog.Infof("handleSubs %s %v %d \n", r.Method, toks, len(toks))
                 //forward /subs to relevant /subs/xxx path
-                if len(toks) < 2 {
+                if len(toks) < 3 {
                         if sub == "" {
                                 toks = append(toks, "new")
                         } else {
                                 toks = append(toks, "you")
+                        }
+                }
+                if len(toks) >= 3 && toks[2] == "" {
+                        if sub == "" {
+                                toks[2] = "new"
+                        } else {
+                                toks[2] = "you"
                         }
                 }
                 switch toks[2] {
@@ -208,13 +215,17 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                         _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
                                         return
                                 }
-                                devicename,err := data.GetPubDeviceName(pub.Hash)
                                 var render RenderOne
+                                devicename,err := data.GetPubDeviceName(pub.Hash)
                                 if err != nil {
                                         glog.Errorf("Https handle subs/pubs/%d : %v \n", id, err)
                                         render = RenderOne{Message: "Unknown", Pub: pub, Categories: dflt_ctgrs}
                                 } else {
-                                        render = RenderOne{Message: devicename, Pub: pub, Categories: dflt_ctgrs}
+                                        pc, err := data.GetPubConfigByHash(pub.Hash)
+                                        if err != nil {
+                                                pc = &data.PubConfig{Kwp: 0, Kwpmake: "unknown", Kwr: 0, Kwrmake: "unknown"}
+                                        }
+                                        render = RenderOne{Message: devicename, Pub: pub, PubConfig: pc, Categories: dflt_ctgrs}
                                 }
                                 err = tmpl_adm_pbs_dee.ExecuteTemplate(w, "base", render)
                                 if err != nil {
@@ -389,6 +400,79 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                 _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
                                 return
                         }
+                case "pubs":
+                        if sub == "" {
+                                glog.Infof("handlesubs post sub/pubs w/o cookie \n")
+                                render := Render {Message: "Login", Categories: dflt_ctgrs}
+                                err := tmpl_adm_sbs_lin.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        render = Render{Message: "Render error", Categories: dflt_ctgrs}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                        return
+                                }
+                                return
+                        } else {
+                                glog.Infof("handlesubs post sub/pubs w cookie %s \n", sub)
+                                hash := 0
+                                if len(toks) < 4 {
+                                        glog.Errorf("Https %v \n", err)
+                                        render := Render{Message: "No pubid provided", Categories: dflt_ctgrs}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                        return
+                                } else {
+                                        hash, err = strconv.Atoi(toks[3])
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                render := Render{Message: "No pubid provided", Categories: dflt_ctgrs}
+                                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                                return
+                                        }
+                                }
+                                v := r.Form
+                                //nickname can only be set during app provisioning
+                                //nn := v.Get("nickname")                                
+                                kwps := v.Get("kwp")
+                                kwpm := v.Get("kwpm")
+                                kwrs := v.Get("kwr")
+                                kwrm := v.Get("kwrm")
+                                kwp, err := strconv.ParseFloat(kwps, 32)
+                                if err != nil {
+                                        glog.Errorf("Https handlesubs post pubconfig %v \n", err)
+                                        render := Render{Message: "Couldn't update pubconfig", Categories: dflt_ctgrs}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                        return
+                                }
+                                kwr, err := strconv.ParseFloat(kwrs, 32)
+                                if err != nil {
+                                        glog.Errorf("Https handlesubs post pubconfig %v \n", err)
+                                        render := Render{Message: "Couldn't update pubconfig", Categories: dflt_ctgrs}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                        return
+                                }
+                                pc := &data.PubConfig{Hash:int64(hash), Kwp: float32(kwp), Kwpmake: kwpm, Kwr: float32(kwr), Kwrmake: kwrm}
+                                if err := data.UpdatePubConfig(pc); err != nil {
+                                        glog.Errorf("Https handlesubs post putpubconfig %v \n", err)
+                                        render := Render{Message: "Couldn't update pub", Categories: dflt_ctgrs}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                        return
+                                }
+                                pub, err := data.GetPubByHash(pc.Hash)
+                                if err != nil {
+                                        glog.Errorf("Https handlesubs post update pubconfig get pub %v \n", err)
+                                        render := Render{Message: "Couldn't update pub", Categories: dflt_ctgrs}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                        return
+                                }
+                                render := RenderOne{Message: pc.Nickname, Pub: pub, PubConfig: pc, Categories: dflt_ctgrs}
+                                err = tmpl_adm_pbs_dee.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                        }
                 default:
                         glog.Infof("No posting at %s \n", r.URL.Path)
                         render := Render {Message: "No posting here", Categories: dflt_ctgrs}
@@ -401,21 +485,83 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
 func handlePubs(w http.ResponseWriter, r *http.Request) {
         switch r.Method{
         case "GET":
-                pbs, err := data.GetPubs(10)
-                if err != nil {
-                        glog.Errorf("Https %v \n", err)
-                        epbs := make([]*data.Pub, 3)
-                        render := Render {Message: "Pubs", Pubs: epbs, Categories: dflt_ctgrs}
-                        _ = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                toks := strings.Split(r.URL.Path, "/")
+                glog.Infof("handlePubs %s %v %d \n", r.Method, toks, len(toks))
+                //forward /pubs to relevant /pubs/xxx path
+                if len(toks) < 3 {
+                        toks = append(toks, "top")
+                }
+                if len(toks) >= 3 && toks[2] == "" {
+                        toks[2] = "top"
+                }
+                switch toks[2] {
+                case "all":
+                        pbs, err := data.GetPubs(10)
+                        if err != nil {
+                                glog.Errorf("Https %v \n", err)
+                                epbs := make([]*data.Pub, 3)
+                                render := Render {Message: "Pubs", Pubs: epbs, Categories: dflt_ctgrs}
+                                _ = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                                return
+                        }
+                        render := Render {Message: "Pubs", Pubs: pbs, Categories: dflt_ctgrs}
+                        err = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                        if err != nil {
+                                glog.Errorf("Https %v \n", err)
+                                return
+                        }
+                        return
+                case "top":
+                        pbs, err := data.GetPubs(10)
+                        if err != nil {
+                                glog.Errorf("Https %v \n", err)
+                                epbs := make([]*data.Pub, 3)
+                                render := Render {Message: "Pubs", Pubs: epbs, Categories: dflt_ctgrs}
+                                _ = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                                return
+                        }
+                        render := Render {Message: "Pubs", Pubs: pbs, Categories: dflt_ctgrs}
+                        err = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                        if err != nil {
+                                glog.Errorf("Https %v \n", err)
+                                return
+                        }
+                        return
+                case "packets":
+                        if len(toks) <= 3 {
+                                glog.Infof("Nothing to see at %s \n", r.URL.Path)
+                                render := Render {Message: "Nothing to see here", Categories: dflt_ctgrs}
+                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                return
+                        } else {
+                                id, err := strconv.ParseInt(toks[3], 10, 64)
+                                if err != nil {
+                                        glog.Infof("strconv: %v \n", err)
+                                        render := Render1 {"Nothing to see here", &data.Packet{}, dflt_ctgrs}
+                                        _ = tmpl_adm_pck_lst.ExecuteTemplate(w, "base", render)
+                                        return
+                                }
+                                pks, err := data.GetLastPackets(id, 10)
+                                if err != nil {
+                                        glog.Infof("Https %v \n", err)
+                                        render := Render {Message: "Packets error", Categories: dflt_ctgrs}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                        return
+                                }
+                                render := Rendern {"Packets", pks, dflt_ctgrs}
+                                err = tmpl_adm_pck_lst.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        fmt.Printf("Https %v \n", err)
+                                        return
+                                }
+                                return
+                        }
+                case "default":
+                        glog.Infof("Nothing to see at %s \n", r.URL.Path)
+                        render := Render {Message: "Nothing here", Categories: dflt_ctgrs}
+                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
                         return
                 }
-                render := Render {Message: "Pubs", Pubs: pbs, Categories: dflt_ctgrs}
-                err = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
-                if err != nil {
-                        glog.Errorf("Https %v \n", err)
-                        return
-                }
-                return
         case "POST":
         }
 }
@@ -533,6 +679,7 @@ func handleAPI(w http.ResponseWriter, r *http.Request) {
 
 }
 
+
 /*
 
 /root -> (get)
@@ -543,10 +690,10 @@ func handleAPI(w http.ResponseWriter, r *http.Request) {
 /subs/pubs/yours (get)
 /subs/pubs/faults(get)
 /subs/pubs/others(get)
-/pubs (get)
+/pubs -> /pubs/top (get)
 /pubs/search (get/post)
-/pubs/id (get)
-/pubs/id/packets (get)
+/pubs/hash (get)
+/pubs/packets/hash (get)
 /admin (get)
 /admin/pubs (get)
 /admin/subs (get)

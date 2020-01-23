@@ -2,7 +2,7 @@
 <h2>Device/Site</h2>
 <section class="standart">
     <div class="form-inline">
-      <form action="https://b00m.in/pubs/{{.Pub.Id}}" method="post" enctype="application/x-www-form-urlencoded" id="useredit" name="useredit"> 
+      <form action="https://b00m.in/subs/pubs/{{.Pub.Hash}}" method="post" enctype="application/x-www-form-urlencoded" id="useredit" name="useredit"> 
       <table>
 	<tr>
 	    <td>
@@ -40,6 +40,42 @@
 	  </div></td>
 	  <td>&nbsp;&nbsp;</td>
 	  <td><div class="field"> {{.Pub.Longitude}}
+	  </div></td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label> Module KWp:</label>
+	      <input type="text" value="{{.PubConfig.Kwp}}" name="kwp">
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
+	  </div></td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label> Module Make:</label>
+	      <input type="text" value="{{.PubConfig.Kwpmake}}" name="kwpm">
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
+	  </div></td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label> Inverter Rating (KW):</label>
+	      <input type="text" value="{{.PubConfig.Kwr}}" name="kwr">
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
+	  </div></td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label> Inverter Make:</label>
+	      <input type="text" value="{{.PubConfig.Kwrmake}}" name="kwrm">
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
 	  </div></td>
 	</tr>
 	<tr>

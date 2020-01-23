@@ -2,13 +2,15 @@
 
 <table class="table"><th>Id</th><th>Created</th><th>Status</th><th>Voltage</th><th>Frequency</th>
 	<tbody>
+	{{range .Packets}}
 		<tr>
-			<td>  {{.Packet.Id}} </td>
-			<td> {{.Packet.Timestamp}} </td>
-			<td> {{.Packet.Status}} </td>
-			<td> {{.Packet.Voltage}} </td>
-			<td> {{.Packet.Frequency}} </td>
+			<td>  {{.Id}} </td>
+			<td> {{.Timestamp}} </td>
+			<td> {{.Status}} </td>
+			<td> {{.Voltage}} </td>
+			<td> {{.Frequency}} </td>
 		</tr>
+	{{end}}
 	</tbody>
 </table>
 <p> {{.Message}}</p>

@@ -10,7 +10,7 @@
 			<td> {{.Longitude}} </td>
 			<td> {{.Created}} </td>
 			<td> OK </td>
-			<td> <a href="/admin/packets/{{.Hash}}"> View </a> </td>
+			<td> <a href="/pubs/packets/{{.Hash}}"> View </a> </td>
 		</tr>
 	{{end}}
 	</tbody>
