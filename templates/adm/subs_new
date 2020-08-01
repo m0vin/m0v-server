@@ -2,7 +2,7 @@
 <h2>New Subscriber</h2>
 <section class="standart">
   <div class="form-inline">
-    <form action="https://b00m.in/subs/new/" method="post" enctype="application/x-www-form-urlencoded" id="usernew" name="usernew"> 
+    <form action="https://pv.b00m.in/subs/new/" method="post" enctype="application/x-www-form-urlencoded" id="usernew" name="usernew"> 
       <table>
 	<tr>
 	    <td>

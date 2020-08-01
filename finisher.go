@@ -67,7 +67,8 @@ var (
         httpWto int
         httpPort int
         httpsPort int
-        keyName = "/home/sridhar/prod/b00m_tls/b00m-key.pem"
+        redirectHttp bool
+        keyName = "./pv.b00m.in/b00m-key.pem" // "/home/sridhar/prod/b00m_tls/b00m-key.pem"
         keyGen = false
         privKey *rsa.PrivateKey
         man *autocert.Manager
@@ -78,6 +79,7 @@ var (
         stag2 = "https://acme-staging-v02.api.letsencrypt.org/directory"
         stag1 = "https://acme-staging.api.letsencrypt.org/directory"
         // templates
+	tmpl_root = template.Must(template.ParseFiles("templates/root"))
 	tmpl_adm_err = template.Must(template.ParseFiles("templates/adm/error", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_errs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pbs_lst = template.Must(template.ParseFiles("templates/adm/pubs_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_pubs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_sbs_lst = template.Must(template.ParseFiles("templates/adm/subs_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
@@ -87,7 +89,7 @@ var (
 	tmpl_adm_sbs_lin = template.Must(template.ParseFiles("templates/adm/subs_login", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pck_lst = template.Must(template.ParseFiles("templates/adm/pcks_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pck_one = template.Must(template.ParseFiles("templates/adm/pcks_one", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
-        dflt_ctgrs = []Category{Category{Name: "GridWatch", }, Category{Name: "Leaderboard"}}
+        dflt_ctgrs = []Category{Category{Name: "Docs", }, Category{Name: "News", }, Category{Name: "GridWatch", }, Category{Name: "Leaderboard"}, Category{Name: "Community"}, Category{Name: "Github"}}
 )
 
 func init() {
@@ -123,12 +125,12 @@ func init() {
                 }
                 privKey = signer.(*rsa.PrivateKey)
         }
-        c = &acme.Client{DirectoryURL: prod1, Key: privKey}
+        c = &acme.Client{DirectoryURL: prod2, Key: privKey}
         man = &autocert.Manager{
                 Client: c,
                 Email: "rcs@m0v.in",
                 Prompt: autocert.AcceptTOS,
-                Cache: autocert.DirCache("/home/sridhar/prod/b00m_tls"),
+                Cache: autocert.DirCache("./pv.b00m.in"), // ("/b00m.in/b00m_tls"), //"/home/sridhar/prod/b00m_tls"),
                 //HostPolicy: autocert.HostWhitelist("m0v.in", "www.m0v.in"),
         }
         oks = expvar.NewInt("oks")
@@ -137,6 +139,7 @@ func init() {
         flag.IntVar(&httpWto, "rto", 10, "Write timeout")
         flag.IntVar(&httpPort, "http_port", 80, "Http server port")
         flag.IntVar(&httpsPort, "https_port", 443, "Http server port")
+        flag.BoolVar(&redirectHttp, "redirect_http", true, "Redirect http to https")
 
 }
 
@@ -145,7 +148,9 @@ func main() {
 	flag.Parse()
         b := make(chan bool, 1)
         go startHttp()
-        go startHttps()
+        if httpsPort > 0 {
+                go startHttps()
+        }
 	/*id, dup, err := data.PutToStore("1234", 5678)
 	if dup {
 		fmt.Printf("a request is already active for controller %s", "1234")
@@ -210,7 +215,15 @@ func startHttp() {
                 fmt.Printf("Visitor %v \n", *oks)
                 fmt.Fprintf(w, "Nothing to see here \n")
         }))*/
-        mux.Handle("/", http.HandlerFunc(RedirectHttp))
+        if redirectHttp {
+                mux.Handle("/", http.HandlerFunc(RedirectHttp))
+        } else {
+                mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+                mux.Handle("/api/", http.HandlerFunc(handleAPI))
+                mux.Handle("/subs/", http.HandlerFunc(handleSubs))
+                mux.Handle("/pubs/", http.HandlerFunc(handlePubs))
+                mux.Handle("/", http.HandlerFunc(handleRoot))
+        }
         hs := http.Server{
                 ReadTimeout: time.Duration(httpRto) * time.Second,
                 WriteTimeout: time.Duration(httpWto) * time.Second,
@@ -226,7 +239,7 @@ func startHttp() {
 func startHttps() {
         mux := http.NewServeMux()
         mux.Handle("/debug/vars", expvar.Handler())
-        mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+        mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
         mux.Handle("/admin/packets/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
                 toks := strings.Split(r.URL.Path, "/")
                 if len(toks) <= 3 {
@@ -286,7 +299,7 @@ func startHttps() {
         hs := http.Server{
                 ReadTimeout: time.Duration(httpRto) * time.Second,
                 WriteTimeout: time.Duration(httpWto) * time.Second,
-                Addr: ":https", //fmt.Sprintf(":%d", httpsPort),
+                Addr: fmt.Sprintf(":%d", httpsPort), //":https", //
                 TLSConfig: man.TLSConfig(),
                 Handler: mux,
         }

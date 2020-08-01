@@ -14,7 +14,29 @@ import (
 func handleRoot(w http.ResponseWriter, r *http.Request) {
         tlsoks.Add(1)
         glog.Infof("Secure visitor %s %v \n", r.RemoteAddr, *tlsoks)
-        fmt.Fprintf(w, "Secure but nothing to see here \n")
+        //fmt.Fprintf(w, "Secure but nothing to see here \n")
+        switch r.Method{
+        case "GET":
+                render := Render {Message: "Coming soon ...", Categories: dflt_ctgrs}
+                err := tmpl_root.ExecuteTemplate(w, "base", render)
+                if err != nil {
+                        glog.Errorf("Https %v \n", err)
+                        render = Render{Message: "Render error", Categories: dflt_ctgrs}
+                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                        return
+                }
+                return
+        case "POST":
+                render := Render {Message: "Coming soon ...", Categories: dflt_ctgrs}
+                err := tmpl_root.ExecuteTemplate(w, "base", render)
+                if err != nil {
+                        glog.Errorf("Https %v \n", err)
+                        render = Render{Message: "Render error", Categories: dflt_ctgrs}
+                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                        return
+                }
+                return
+        }
 }
 
 func handleAdmin(w http.ResponseWriter, r *http.Request) {

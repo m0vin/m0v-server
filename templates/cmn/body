@@ -1,17 +1,18 @@
 {{define "body"}}
 <body>
   <div id="notification"></div>
-  <div class="page full">
-    <div class="w-100">
-      <header id="header">
+  <div class="page">
+    <div class="pivot" style="background-color: #FFFFFF;">
+      <header id="header" style="background-color: #FFFFFF;">
         <div id="logo"> <!--logo-->
-          <a href="http://pv.b00m.in"><img src="/static/images/boom.png" title="B00MIN" alt="B00M" width="130px" height="44px"/>
+          <a href="https://pv.b00m.in"><img src="/images/logo_wo_bgrnd.png" title="B00M" alt="B00M" width="130px" height="44px"/>
           </a>
         </div> <!--logo -->
 	<br>
 	<span id="welcome" class="hide-phone"> 
 	  <span id="welword">Welcome &nbsp;</span>
-	  <span id="user" > </span> 
+	  <span id="user" >{{.Cstmr.Firstname}}</span> 
+          {{if eq .Cstmr.Firstname "Guest"}}
           <span id="login" class="item" > &nbsp; Login
             <div class="drop-content">
               <div class="drop-body">
@@ -22,14 +23,16 @@
                 </form>
               </div>
             </div>
-	     or <a href="/subs/new">Register</a>.
+	     or <a href="/account/register">Register</a>.
 	  </span>
+          {{else}}
 	  <span id="logout"> 
-	    <a href="/subs/logout"  > &nbsp; Logout </a>
+	    <a href="/account/logout"  > &nbsp; Logout </a>
 		  <!--<form id="userlogout">
 		    <input type="submit" value="Logout"/>
 		  </form>-->
 	  </span>
+          {{end}}
 	  <span id=result></span>
 	</span>
       </header>
@@ -54,18 +57,16 @@
       <nav class="nav hide-phone">
 	<ul>
 	  <li class="tftooltip" title="Home"><a href="/goods"><span class="icon"></span></a></li>
-          <!--CAT MENU LINKS-->
-		{{template "menu" .}}
+		<!-- {{template "menu" .}} -->
 	</ul>
 	<div class="clear"></div>
       </nav>
     </div>
 
-    <div id="pivot" class="vh-100">
-      <div id="content">
- 
-	{{template "right" .}}
-	{{template "center" .}}
+    <div id="pivot">
+      <div id="content" style="font-size:20px; height:250px">
+
+        <b> 404 Nothing to see here </b>
 
       </div>
     </div>
