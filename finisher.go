@@ -21,6 +21,8 @@ import (
         "net/http"
         "os"
         //"reflect"
+	"path/filepath"
+        "regexp"
 	"rsc.io/quote"
         "strconv"
         "strings"
@@ -60,6 +62,12 @@ type Category struct {
         Name string `json:"name"`
 }
 
+func (c *Category) ToLower() string {
+
+        return strings.ToLower(c.Name)
+
+}
+
 var (
         oks *expvar.Int
         tlsoks *expvar.Int
@@ -78,7 +86,11 @@ var (
         reg1 = "https://acme-v01.api.letsencrypt.org/acme/reg"
         stag2 = "https://acme-staging-v02.api.letsencrypt.org/directory"
         stag1 = "https://acme-staging.api.letsencrypt.org/directory"
+        cssFile = regexp.MustCompile("\\.css$")
+        jsFile = regexp.MustCompile("\\.js$")
+        staticfileserver = http.FileServer(http.Dir("static"))
         // templates
+        tmpl_index = template.Must(template.ParseFiles("static/index.html"))
 	tmpl_root = template.Must(template.ParseFiles("templates/root"))
 	tmpl_adm_err = template.Must(template.ParseFiles("templates/adm/error", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_errs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pbs_lst = template.Must(template.ParseFiles("templates/adm/pubs_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_pubs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head", "templates/cmn/menu", "templates/cmn/footer"))
@@ -89,7 +101,8 @@ var (
 	tmpl_adm_sbs_lin = template.Must(template.ParseFiles("templates/adm/subs_login", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pck_lst = template.Must(template.ParseFiles("templates/adm/pcks_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pck_one = template.Must(template.ParseFiles("templates/adm/pcks_one", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
-        dflt_ctgrs = []Category{Category{Name: "Docs", }, Category{Name: "News", }, Category{Name: "GridWatch", }, Category{Name: "Leaderboard"}, Category{Name: "Community"}, Category{Name: "Github"}}
+        dflt_ctgrs = []Category{Category{Name: "Docs", }, Category{Name: "News", }, Category{Name: "Gridwatch", }, Category{Name: "Leaderboard"}, Category{Name: "Community"}, Category{Name: "Github"}}
+	tmpl_grw = template.Must(template.ParseFiles("templates/adm/cmn/body1", "templates/adm/cmn/right", "templates/adm/cmn/center_grw", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 )
 
 func init() {
@@ -147,6 +160,8 @@ func main() {
 	fmt.Println(quote.Hello())
 	flag.Parse()
         b := make(chan bool, 1)
+	cacheGeoJSON()
+	loadStations()
         go startHttp()
         if httpsPort > 0 {
                 go startHttps()
@@ -218,10 +233,14 @@ func startHttp() {
         if redirectHttp {
                 mux.Handle("/", http.HandlerFunc(RedirectHttp))
         } else {
-                mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+                //mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+                mux.Handle("/static/", http.StripPrefix("/static/", http.HandlerFunc(fileHandler)))
                 mux.Handle("/api/", http.HandlerFunc(handleAPI))
                 mux.Handle("/subs/", http.HandlerFunc(handleSubs))
                 mux.Handle("/pubs/", http.HandlerFunc(handlePubs))
+                mux.Handle("/data/subway-stations", http.HandlerFunc(subwayStationsHandler))
+                mux.Handle("/data/subway-lines", http.HandlerFunc(subwayLinesHandler))
+                mux.Handle("/gridwatch/", http.HandlerFunc(indexHandler))
                 mux.Handle("/", http.HandlerFunc(handleRoot))
         }
         hs := http.Server{
@@ -365,4 +384,24 @@ func parsePrivateKey(der []byte) (crypto.Signer, error) {
 	}
 
 	return nil, errors.New("acme/autocert: failed to parse private key")
+}
+
+// GeoJSON is a cache of the NYC Subway Station and Line data.
+var GeoJSON = make(map[string][]byte)
+
+// cacheGeoJSON loads files under data into `GeoJSON`.
+func cacheGeoJSON() {
+	filenames, err := filepath.Glob("static/data/*")
+	if err != nil {
+		// Note: this will take down the GAE instance by exiting this process.
+		glog.Fatalf("%v \n", err)
+	}
+	for _, f := range filenames {
+		name := filepath.Base(f)
+		dat, err := ioutil.ReadFile(f)
+		if err != nil {
+			glog.Fatalf("%v \n", err)
+		}
+		GeoJSON[name] = dat
+	}
 }

@@ -1,9 +1,10 @@
 {{define "head"}}
 <head>
-  <link rel="stylesheet" type="text/css" href="../../static/css/markup.css">
-  <link rel="stylesheet" type="text/css" href="../../static/css/colorbox.css">
-  <link rel="stylesheet" type="text/css" href="../../static/css/jquery.stepper.min.css">
-  <link rel="stylesheet" type="text/css" href="../../static/css/jquery-ui-1.8.16.custom.css" />
+  <link rel="icon" type="image/png" href="/static/favicon-16x16.png" sizes="16x16">
+  <link rel="stylesheet" type="text/css" href="/static/css/markup.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/colorbox.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/jquery.stepper.min.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui-1.8.16.custom.css" />
   <title>
 	B00M Leaderboard
   </title>

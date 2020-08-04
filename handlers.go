@@ -701,6 +701,37 @@ func handleAPI(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func fileHandler(w http.ResponseWriter, r *http.Request) {
+        ruri := r.RequestURI
+        //glog.Infof("content-type %s \n", ruri)
+        if cssFile.MatchString(ruri) {
+        //        glog.Infof("Setting content-type css %s \n", ruri)
+                w.Header().Set("Content-Type", "text/css")
+        }
+        if jsFile.MatchString(ruri) {
+        //        glog.Infof("Setting content-type js %s \n", ruri)
+                w.Header().Set("Content-Type", "text/javascript")
+        }
+        staticfileserver.ServeHTTP(w, r)
+
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "text/html")
+        render := Render {Message: "Gridwatch", Categories: dflt_ctgrs}
+	err := tmpl_grw.ExecuteTemplate(w, "base", render)
+        if err !=nil {
+                fmt.Printf("Error: %v \n", err)
+                return
+        }
+        return
+}
+
+func subwayLinesHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+	w.Write(GeoJSON["subway-lines.geojson"])
+}
+
 
 /*
 
