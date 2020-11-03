@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package main
+package data
 
 import (
 	"fmt"
@@ -61,6 +61,7 @@ func clusterStations(spatials []rtree.Spatial, zoom int) (*geojson.FeatureCollec
 	fc := geojson.NewFeatureCollection()
 	for _, id := range noise {
 		f := spatials[id].(*Station).feature
+                //glog.Infof("Found some noise: %v %v\n", f.Geometry, f.Properties)
 		name, err := f.PropertyString("name")
 		if err != nil {
 			return nil, err

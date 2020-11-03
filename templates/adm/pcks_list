@@ -1,6 +1,9 @@
 {{define "pubs_admin"}}
 
-<table class="table"><th>Id</th><th>Created</th><th>Status</th><th>Voltage</th><th>Frequency</th>
+<script src="/static/table.js" defer>
+</script>
+<div id="tdn" style="display:none;">packets</div>
+<table id="packets" class="table"><th>Id</th><th>Created</th><th>Status</th><th>Voltage</th><th>Frequency</th>
 	<tbody>
 	{{range .Packets}}
 		<tr>

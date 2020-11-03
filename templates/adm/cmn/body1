@@ -1,0 +1,71 @@
+{{define "body"}}
+<body>
+  <div id="notification"></div>
+  <div class="page full">
+    <div class="w-100">
+      <header id="header">
+        <div id="logo"> <!--logo-->
+          <a href="http://pv.b00m.in"><img src="/static/images/boom.png" title="B00MIN" alt="B00M" width="130px" height="44px"/>
+          </a>
+        </div> <!--logo -->
+	<br>
+	<span id="welcome" class="hide-phone"> 
+	  <span id="welword">Welcome &nbsp;</span>
+	  <span id="user" > </span> 
+          <span id="login" class="item" > &nbsp; Login
+            <div class="drop-content">
+              <div class="drop-body">
+                <form id="userlogin">
+                  <input type="text" id="email" value="email"/>					
+                  <input type="password" id="pswd" value="pswd"/>					
+                  <input type="submit" value="Login"/>
+                </form>
+              </div>
+            </div>
+	     or <a href="/subs/new">Register</a>.
+	  </span>
+	  <span id="logout"> 
+	    <a href="/subs/logout"  > &nbsp; Logout </a>
+		  <!--<form id="userlogout">
+		    <input type="submit" value="Logout"/>
+		  </form>-->
+	  </span>
+	  <span id=result></span>
+	</span>
+      </header>
+    
+      <nav class="nav-phone show-phone hide-desktop hide-tablet">
+	<div>Menu</div>
+	<select onChange="location = this.value">
+	  <option></option>
+	  <option value="https://pv.b00m.in">Home</option>
+	  <option value="https://pv.b00m.in/docs">Docs</option>
+	  <option value="https://pv.b00m.in/news">News</option>
+	  <option value="https://pv.b00m.in/gridwatch">Gridwatch</option>
+	  <option value="https://pv.b00m.in/leaderboard">Leaderboard</option>
+	  <option value="https://pv.b00m.in/community">Community</option>
+	  <option value="https://pv.b00m.in/github">Github</option>
+	</select>
+      </nav>
+      <nav class="nav hide-phone">
+	<ul>
+	  <li class="tftooltip" title="Home"><a href="https://pv.b00m.in"><span class="icon"></span></a></li>
+          <!--CAT MENU LINKS-->
+		{{template "menu" .}}
+	</ul>
+	<div class="clear"></div>
+      </nav>
+    </div>
+
+    <div id="pivot" class="vh-100">
+      <div id="content" class="vh-100">
+ 
+	{{template "center" .}}
+
+      </div>
+    </div>
+
+    {{template "footer" .}}
+  </div>
+</body>
+{{end}}

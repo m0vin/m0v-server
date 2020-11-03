@@ -1,0 +1,17 @@
+{{define "pubs_admin"}}
+
+<table class="table"><th>Id</th><th>Created</th><th>Status</th><th>Voltage</th><th>Frequency</th>
+	<tbody>
+		<tr>
+			<td>  {{.Packet.Id}} </td>
+			<td> {{.Packet.Timestamp}} </td>
+			<td> {{.Packet.Status}} </td>
+			<td> {{.Packet.Voltage}} </td>
+			<td> {{.Packet.Frequency}} </td>
+		</tr>
+	</tbody>
+</table>
+<p> {{.Message}}</p>
+{{end}}
+
+

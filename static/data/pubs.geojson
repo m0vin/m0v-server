@@ -1,0 +1,6 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {"type":"Feature","properties":{"name":"moda","url":"http://web.mta.info/nyct/service/","line":"4-6-6 Express","objectid":"1","notes":"4 nights, 6-all times, 6 Express-weekdays AM southbound, PM northbound"},"geometry":{"type":"Point","coordinates":[12.95, 77.6]}},{"type":"Feature","properties":{"name":"Canal St","url":"http://web.mta.info/nyct/service/","line":"4-6-6 Express","objectid":"2","notes":"4 nights, 6-all times, 6 Express-weekdays AM southbound, PM northbound"},"geometry":{"type":"Point","coordinates":[12.93, 77.63]}}]
+}
+

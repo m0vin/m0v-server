@@ -1,6 +1,7 @@
 package main
 
 import (
+        "encoding/json"
         "fmt"
         "github.com/golang/glog"
         "io"
@@ -563,7 +564,7 @@ func handlePubs(w http.ResponseWriter, r *http.Request) {
                                         _ = tmpl_adm_pck_lst.ExecuteTemplate(w, "base", render)
                                         return
                                 }
-                                pks, err := data.GetLastPackets(id, 10)
+                                pks, err := data.GetLastPackets(id, 100)
                                 if err != nil {
                                         glog.Infof("Https %v \n", err)
                                         render := Render {Message: "Packets error", Categories: dflt_ctgrs}
@@ -610,6 +611,26 @@ func handleAPI(w http.ResponseWriter, r *http.Request) {
                         }
                         w.WriteHeader(http.StatusOK)
                         w.Write([]byte(strconv.FormatInt(confo.Hash, 10)))
+                        return
+                case "pubs":
+                        //pubs, err := data.GetPubs(100)
+                        pubs, err := data.GetPubDummies(50)
+                        if err != nil {
+                                str := fmt.Sprintf("Couldn't query results: %s", err)
+                                http.Error(w, str, 500)
+                                return
+                        }
+                        glog.Infof("Dummies: %v \n", pubs[0])
+                        err = json.NewEncoder(w).Encode(pubs)
+                        if err != nil {
+                                str := fmt.Sprintf("Couldn't encode results: %s", err)
+                                http.Error(w, str, 500)
+                                return
+                        }
+                        return
+                case "subs":
+                        return
+                case "packets":
                         return
                 }
         case "POST":
@@ -729,7 +750,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 func subwayLinesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
-	w.Write(GeoJSON["subway-lines.geojson"])
+	w.Write(data.GeoJSON["subway-lines.geojson"])
 }
 
 

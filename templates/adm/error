@@ -1,0 +1,9 @@
+{{define "error"}}
+
+<table class="table">
+	<tbody>
+
+	</tbody>
+</table>
+<p> {{.Message}}</p>
+{{end}}

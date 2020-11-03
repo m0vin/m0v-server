@@ -13,11 +13,14 @@
  * permissions and limitations under the License.
  */
 
-package main
+package data
 
 import (
 	"encoding/json"
+	"path/filepath"
 	"fmt"
+        "io/ioutil"
+        "github.com/golang/glog"
 	"log"
 	"math"
 	"net/http"
@@ -27,6 +30,26 @@ import (
 	rtree "github.com/dhconnelly/rtreego"
 	geojson "github.com/paulmach/go.geojson"
 )
+
+// GeoJSON is a cache of the NYC Subway Station and Line data.
+var GeoJSON = make(map[string][]byte)
+
+// cacheGeoJSON loads files under data into `GeoJSON`.
+func CacheGeoJSON() {
+	filenames, err := filepath.Glob("static/data/*")
+	if err != nil {
+		// Note: this will take down the GAE instance by exiting this process.
+		glog.Fatalf("%v \n", err)
+	}
+	for _, f := range filenames {
+		name := filepath.Base(f)
+		dat, err := ioutil.ReadFile(f)
+		if err != nil {
+			glog.Fatalf("%v \n", err)
+		}
+		GeoJSON[name] = dat
+	}
+}
 
 // Stations is an RTree housing the stations
 var Stations = rtree.NewTree(2, 25, 50)
@@ -48,7 +71,7 @@ func (s *Station) Bounds() *rtree.Rect {
 
 // loadStations loads the geojson features from
 // `subway-stations.geojson` into the `Stations` rtree.
-func loadStations() {
+func LoadStations() {
 	stationsGeojson := GeoJSON["subway-stations.geojson"]
 	fc, err := geojson.UnmarshalFeatureCollection(stationsGeojson)
 	if err != nil {
@@ -57,13 +80,14 @@ func loadStations() {
 	}
 	for _, f := range fc.Features {
 		Stations.Insert(&Station{f})
+                glog.Infof("Feature inserted into tree %v %v\n", f.Geometry, f.Properties)
 	}
 }
 
 // subwayStationsHandler reads r for a "viewport" query parameter
 // and writes a GeoJSON response of the features contained in
 // that viewport into w.
-func subwayStationsHandler(w http.ResponseWriter, r *http.Request) {
+func SubwayStationsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
 	vp := r.FormValue("viewport")
 	rect, err := newRect(vp)
@@ -79,6 +103,9 @@ func subwayStationsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s := Stations.SearchIntersect(rect)
+        if len(s) == 0 {
+                glog.Infof("Nothing in s %v \n", s)
+        }
 	fc, err := clusterStations(s, int(zm))
 	if err != nil {
 		str := fmt.Sprintf("Couldn't cluster results: %s", err)

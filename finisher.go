@@ -21,7 +21,6 @@ import (
         "net/http"
         "os"
         //"reflect"
-	"path/filepath"
         "regexp"
 	"rsc.io/quote"
         "strconv"
@@ -160,8 +159,14 @@ func main() {
 	fmt.Println(quote.Hello())
 	flag.Parse()
         b := make(chan bool, 1)
-	cacheGeoJSON()
-	loadStations()
+	data.CacheGeoJSON()
+	data.LoadStations()
+	//data.LoadPubdeetsLocal()
+	//if err := data.LoadPubdeets(); err != nil {
+	if err := data.LoadDummyPubdeets(); err != nil {
+                glog.Infof("data.LoadPubdeets %v \n", err)
+        }
+        go loadPubdeets()
         go startHttp()
         if httpsPort > 0 {
                 go startHttps()
@@ -238,8 +243,9 @@ func startHttp() {
                 mux.Handle("/api/", http.HandlerFunc(handleAPI))
                 mux.Handle("/subs/", http.HandlerFunc(handleSubs))
                 mux.Handle("/pubs/", http.HandlerFunc(handlePubs))
-                mux.Handle("/data/subway-stations", http.HandlerFunc(subwayStationsHandler))
+                mux.Handle("/data/subway-stations", http.HandlerFunc(data.SubwayStationsHandler))
                 mux.Handle("/data/subway-lines", http.HandlerFunc(subwayLinesHandler))
+                mux.Handle("/data/publishers", http.HandlerFunc(data.PubDeetsHandler))
                 mux.Handle("/gridwatch/", http.HandlerFunc(indexHandler))
                 mux.Handle("/", http.HandlerFunc(handleRoot))
         }
@@ -386,22 +392,13 @@ func parsePrivateKey(der []byte) (crypto.Signer, error) {
 	return nil, errors.New("acme/autocert: failed to parse private key")
 }
 
-// GeoJSON is a cache of the NYC Subway Station and Line data.
-var GeoJSON = make(map[string][]byte)
-
-// cacheGeoJSON loads files under data into `GeoJSON`.
-func cacheGeoJSON() {
-	filenames, err := filepath.Glob("static/data/*")
-	if err != nil {
-		// Note: this will take down the GAE instance by exiting this process.
-		glog.Fatalf("%v \n", err)
-	}
-	for _, f := range filenames {
-		name := filepath.Base(f)
-		dat, err := ioutil.ReadFile(f)
-		if err != nil {
-			glog.Fatalf("%v \n", err)
-		}
-		GeoJSON[name] = dat
-	}
+func loadPubdeets() {
+        for {
+                select {
+                case <-time.After(time.Duration(600 * time.Second)):
+                        if err := data.LoadDummyPubdeets(); err != nil {
+                                glog.Infof("data.LoadStations %v \n", err)
+                        }
+                }
+        }
 }

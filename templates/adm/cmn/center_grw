@@ -1,0 +1,8 @@
+{{define "center"}}
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+    <div id="map" class="map vh-100"></div>
+    <script src="/static/app.js"></script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AlAMgSTUyOa_N7AU&callback=initMap">
+    </script>
+{{end}}
