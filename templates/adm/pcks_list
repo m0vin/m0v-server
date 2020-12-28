@@ -3,15 +3,17 @@
 <script src="/static/table.js" defer>
 </script>
 <div id="tdn" style="display:none;">packets</div>
-<table id="packets" class="table"><th>Id</th><th>Created</th><th>Status</th><th>Voltage</th><th>Frequency</th>
+<table id="packets" class="table"><th>Id</th><th>Created</th><th>Status</th><th>Voltage</th><th>Frequency</th><th>Import</th><th>Export</th>
 	<tbody>
 	{{range .Packets}}
 		<tr>
-			<td>  {{.Id}} </td>
-			<td> {{.Timestamp}} </td>
+			<td> {{.Id}} </td>
+			<td> {{.FormattedTimestamp}} </td>
 			<td> {{.Status}} </td>
-			<td> {{.Voltage}} </td>
-			<td> {{.Frequency}} </td>
+			<td> {{printf "%.2f" .Voltage}} </td>
+			<td> {{printf "%.2f" .Frequency}} </td>
+			<td> {{printf "%.2f" .ImActEn}} </td>
+			<td> {{printf "%.2f" .ExActEn}} </td>
 		</tr>
 	{{end}}
 	</tbody>

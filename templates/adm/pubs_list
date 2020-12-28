@@ -1,15 +1,15 @@
 {{define "pubs_admin"}}
 
-<table class="table"><th>Id</th><th>Lat</th><th>Lng</th><th>Alt</th><th>Created</th><th>Status</th><th>Packets</th>
+<table class="table"><th>Id</th><th>Hash</th><th>Created</th><th>Lat</th><th>Lng</th><th>Alt</th><th>Packets</th>
 	<tbody>
 	{{range .Pubs}}
 		<tr>
 			<td> <a href="/subs/pubs/{{.Id}}"> {{.Id}} </a> </td>
 			<td> {{.Hash}} </td>
-			<td>  {{.Latitude}} </td>
+			<td> {{.FormattedCreated}} </td>
+			<td> {{.Latitude}} </td>
 			<td> {{.Longitude}} </td>
-			<td> {{.Created}} </td>
-			<td> OK </td>
+			<td> {{.Altitude}} </td>
 			<td> <a href="/pubs/packets/{{.Hash}}"> View </a> </td>
 		</tr>
 	{{end}}
