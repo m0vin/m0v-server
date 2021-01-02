@@ -12,6 +12,8 @@ require (
 
 replace m0v.in/finisher/data => ./data
 
+replace m0v.in/finisher/comms => ./comms
+
 //replace github.com/lib/pq => ../mygo/src/github.com/lib/pq
 
 go 1.13

@@ -6,6 +6,7 @@ import (
 	_ "github.com/lib/pq"
         "github.com/golang/glog"
 	//"golang.gurusys.co.uk/go-framework/sql"
+        "crypto/sha1"
         "math/rand"
         "sort"
 	"time"
@@ -160,6 +161,12 @@ type Sub struct {
         Phone string `json:"phone"`
         Pswd string `json:"pswd"`
         Created time.Time `json:"created,omitempty"`
+        Verification string `json:"verification,omitempty"`
+        Verified bool `json:"verified"`
+}
+
+func (s *Sub) FormattedCreated() string {
+        return s.Created.Format("2006-01-02 15:04:05")
 }
 
 type WrappedCoordinate struct {
@@ -549,7 +556,7 @@ func PutSub(sub *Sub) (uint64, error) {
                 glog.Error(err)
 		created, err = time.Now().MarshalText()
 	}
-        result, err := db.Exec("insert into sub (email, phone, name, pswd, created_at) values ($1, $2, $3, $4, $5)", sub.Email, sub.Phone, sub.Name, sub.Pswd, string(created))
+        result, err := db.Exec("insert into sub (email, phone, name, pswd, created_at, verification) values ($1, $2, $3, $4, $5, $6)", sub.Email, sub.Phone, sub.Name, sub.Pswd, string(created), sub.Verification)
         if err != nil {
                 glog.Error(err)
                 return 0 , err
@@ -621,7 +628,7 @@ func GetSubs(limit int) ([]*Sub, error) {
                 glog.Error(err)
                 return nil, err
         }
-        rows, err := db.Query("select sub_id, created_at, email, name, phone from sub order by created_at desc limit $1", limit)
+        rows, err := db.Query("select sub_id, created_at, email, name, phone, verified from sub order by created_at desc limit $1", limit)
         if err != nil {
                 glog.Errorf("data.GetSubs %v \n", err)
                 return nil, err
@@ -631,17 +638,17 @@ func GetSubs(limit int) ([]*Sub, error) {
                 glog.Errorf("data.GetPubs no rows \n")
                 return nil, fmt.Errorf("No data for pub \n")
         }*/
-        pbs := make([]*Sub, 0)
+        sbs := make([]*Sub, 0)
         for rows.Next() {
-                pb := &Sub{}
-                if err := rows.Scan(&pb.Id, &pb.Created, &pb.Email, &pb.Name, &pb.Phone); err != nil {
+                sb := &Sub{}
+                if err := rows.Scan(&sb.Id, &sb.Created, &sb.Email, &sb.Name, &sb.Phone, &sb.Verified); err != nil {
                         glog.Errorf("data.GetSubs %v \n", err)
-                        return pbs, fmt.Errorf("No data for subs \n")
+                        return sbs, fmt.Errorf("No data for subs \n")
                 }
                 //glog.Infof("data.GetSubs appending \n")
-                pbs = append(pbs, pb)
+                sbs = append(sbs, sb)
         }
-        return pbs, nil
+        return sbs, nil
 }
 
 // PutCsub persists an unknown Sub with unregistered email which may be part of a confo from device
@@ -684,6 +691,36 @@ func GetCsubByEmail(email string) (*Sub, error) {
         err = rows.Scan(&pc.Id, &pc.Created, &pc.Email)
         if err != nil {
                 glog.Errorf("data.GetCsubByEmail %v \n", err)
+                return nil, err
+        }
+        return pc, nil
+}
+
+func CheckVerification(verification string) (*Sub, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select sub_id, email from sub where verification=$1", verification)
+        if err != nil {
+                glog.Errorf("data.CheckVerification %v \n", err)
+                return nil, err
+        }
+        if !rows.Next() {
+                glog.Errorf("data.CheckVerification %v \n", err)
+                return nil, fmt.Errorf("No data for verification: %s \n", verification)
+        }
+        pc := &Sub{}
+        err = rows.Scan(&pc.Id, &pc.Email)
+        if err != nil {
+                glog.Errorf("data.CheckVerification %v \n", err)
+                return nil, err
+        }
+        rows.Close()
+        _, err = db.Exec("update sub set verified = TRUE where verification=$1", verification)
+        if err != nil {
+                glog.Errorf("data.CheckVerification %v \n", err)
                 return nil, err
         }
         return pc, nil
@@ -1148,4 +1185,13 @@ func logRequestUpdate(requestId uint64, status string) {
 	if err != nil {
 		fmt.Printf("Failed to update logrequestupdate (%d,%s): %s\n", requestId, status, err)
 	}
+}
+
+// Sha1Str returns the first 8 bytes in hex string representation of the SHA1 hash of the input str
+func Sha1Str(str string) string {
+        eb := []byte(str)
+        ebs20 := sha1.Sum(eb)
+        ebs8 := ebs20[:8]
+        sha1str := fmt.Sprintf("%x", ebs8)
+        return sha1str
 }

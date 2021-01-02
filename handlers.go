@@ -6,6 +6,7 @@ import (
         "github.com/golang/glog"
         "io"
 	"m0v.in/finisher/data"
+	"m0v.in/finisher/comms"
         "net/http"
         "strconv"
         "strings"
@@ -335,6 +336,26 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                 return
                         }
                         return
+                case "verify":
+                        //check if toks[3] exists
+                        if len(toks) != 4 {
+                                glog.Infof("Nothing to see at %s \n", r.URL.Path)
+                                render := Render {Message: "Nothing here", Categories: dflt_ctgrs}
+                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                return
+                        }
+                        //check if verification exists in table sub
+                        s1, err := data.CheckVerification(toks[3])
+                        if err != nil {
+                                glog.Infof("Nothing to see at %s \n", r.URL.Path)
+                                render := Render {Message: "Verification doesn't exist", Categories: dflt_ctgrs}
+                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                return
+                        }
+                        glog.Infof("Verified %s \n", s1.Email)
+                        render := Render {Message: "Thanks for verifying, please login", Categories: dflt_ctgrs}
+                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                        return
                 default:
                         glog.Infof("Nothing to see at %s \n", r.URL.Path)
                         render := Render {Message: "Nothing here", Categories: dflt_ctgrs}
@@ -371,7 +392,8 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                         _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
                                         return
                                 }
-                                id, err := data.PutSub(&data.Sub{Email:e, Name:n, Phone:p, Pswd:pw})
+                                sha1str := data.Sha1Str(e) // 16 characters of sha1 hash
+                                id, err := data.PutSub(&data.Sub{Email:e, Name:n, Phone:p, Pswd:pw, Verification: sha1str})
                                 if err != nil {
                                         glog.Errorf("handlesubs post putsubs %v \n", err)
                                         render := Render{Message: "Couldn't create Sub", Categories: dflt_ctgrs}
@@ -379,6 +401,7 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                         return
                                 }
                                 // success
+                                newregs <- comms.Entity{e, n} // put in channel to send email
                                 glog.Infof("handleSubs set cookie %s \n", e)
                                 http.SetCookie(w, &http.Cookie{Name: "sub", Value: e, Domain:"b00m.in", Path: "/", MaxAge: 300, HttpOnly: true, Expires: time.Now().Add(time.Second * 120)})
                                 glog.Infof("handlesubs post putsubs %s %d \n", n, id)
@@ -674,6 +697,7 @@ func handleAPI(w http.ResponseWriter, r *http.Request) {
                                         io.WriteString(w, "Sorry couldn't register")
                                         return
                                 }
+                                newregs <- comms.Entity{e, fn}
                                 w.WriteHeader(http.StatusOK)
                                 io.WriteString(w, "Registered " + strconv.Itoa(int(i)))
                                 return

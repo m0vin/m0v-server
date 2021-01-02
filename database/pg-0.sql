@@ -41,7 +41,9 @@ CREATE TABLE IF NOT EXISTS sub (
 	phone VARCHAR(32),
 	name VARCHAR(32),
 	pswd VARCHAR(16),
-	created_at TIMESTAMPTZ default current_timestamp
+	created_at TIMESTAMPTZ default current_timestamp,
+	verification VARCHAR(16),
+	verified BOOLEAN default FALSE
 );
 
 CREATE TABLE IF NOT EXISTS csub (

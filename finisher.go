@@ -18,6 +18,7 @@ import (
 	"html/template"
         "io/ioutil"
 	"m0v.in/finisher/data"
+	"m0v.in/finisher/comms"
         "net/http"
         "os"
         //"reflect"
@@ -88,6 +89,7 @@ var (
         cssFile = regexp.MustCompile("\\.css$")
         jsFile = regexp.MustCompile("\\.js$")
         staticfileserver = http.FileServer(http.Dir("static"))
+        newregs chan comms.Entity
         // templates
         tmpl_index = template.Must(template.ParseFiles("static/index.html"))
 	tmpl_root = template.Must(template.ParseFiles("templates/root"))
@@ -159,6 +161,7 @@ func main() {
 	fmt.Println(quote.Hello())
 	flag.Parse()
         b := make(chan bool, 1)
+        newregs = make(chan comms.Entity, 3)
 	data.CacheGeoJSON()
 	data.LoadStations()
 	//data.LoadPubdeetsLocal()
@@ -392,9 +395,20 @@ func parsePrivateKey(der []byte) (crypto.Signer, error) {
 	return nil, errors.New("acme/autocert: failed to parse private key")
 }
 
+// loadPubDdeets also listens on channel to recieve data of new registrants to send email
 func loadPubdeets() {
+        from := comms.Entity{"rcs@b00m.in", "RCS"}
+        to := make([]comms.Entity, 0)
         for {
                 select {
+                case newreg:= <-newregs:
+                        to = append(to, newreg)
+                        sha1str := data.Sha1Str(newreg.Email)
+                        err := comms.SendMail(from, to, "Welcome to B00M","Welcome. Please verify your email https://pv.b00m.in/subs/verify/" + sha1str)
+                        if err != nil {
+                                glog.Infof("comms.SendEmail %v \n", err)
+                        }
+                        to = to[:0]
                 case <-time.After(time.Duration(600 * time.Second)):
                         if err := data.LoadDummyPubdeets(); err != nil {
                                 glog.Infof("data.LoadStations %v \n", err)

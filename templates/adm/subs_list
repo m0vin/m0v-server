@@ -1,6 +1,6 @@
 {{define "subs_admin"}}
 
-<table class="table"><th>Id</th><th>Email</th><th>Name</th><th>Phone</th><th>Created</th><th>Status</th><th>Details</th>
+<table class="table"><th>Id</th><th>Email</th><th>Name</th><th>Phone</th><th>Created</th><th>Verified</th>
 	<tbody>
 	{{range .Subs}}
 		<tr>
@@ -8,9 +8,8 @@
 			<td> {{.Email}} </td>
 			<td>  {{.Name}} </td>
 			<td> {{.Phone}} </td>
-			<td> {{.Created}} </td>
-			<td> OK </td>
-			<td> <a href="/admin/subs/{{.Id}}"> View </a> </td>
+			<td> {{.FormattedCreated}} </td>
+			<td> {{.Verified}} </td>
 		</tr>
 	{{end}}
 	</tbody>
