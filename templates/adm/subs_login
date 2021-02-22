@@ -27,7 +27,7 @@
 	  </td>
 	</tr>
 	<tr>
-	   <td> I have read and agree to the <a alt="Privacy Policy" href="/info/privacy" class="colorbox cboxElement"><b>Privacy Policy</b></a> 
+	   <td> I have read and agree to the <a alt="Privacy Policy" href="/subs/privacy" class="colorbox cboxElement"><b>Privacy Policy</b></a> 
 	    <input type="checkbox" value="1" name="agree">
 	  </td>
 	  <td>&nbsp;&nbsp;</td>

@@ -34,6 +34,7 @@ type Render struct { //for most purposes
         Subs []*data.Sub `json:"subs,string"`
         Pubs []*data.Pub `json:"pubs,string"`
         Categories []Category `json:"categories,string"`
+        User string
 }
 
 type RenderOne struct { //for most purposes
@@ -42,6 +43,7 @@ type RenderOne struct { //for most purposes
         Pub *data.Pub `json:"pub,string"`
         PubConfig *data.PubConfig `json:"pubconfig,string"`
         Categories []Category `json:"categories,string"`
+        User string
 }
 
 type Render1 struct { //for a packet
@@ -49,6 +51,7 @@ type Render1 struct { //for a packet
         //Sub sub `json:"sub"`
         Packet *data.Packet `json:"packet,string"`
         Categories []Category `json:"categories,string"`
+        User string
 }
 
 type Rendern struct { //for packets
@@ -56,6 +59,7 @@ type Rendern struct { //for packets
         //Sub sub `json:"sub"`
         Packets []*data.Packet `json:"packet,string"`
         Categories []Category `json:"categories,string"`
+        User string
 }
 
 type Category struct {
@@ -98,10 +102,13 @@ var (
 	tmpl_adm_sbs_lst = template.Must(template.ParseFiles("templates/adm/subs_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_sbs_new = template.Must(template.ParseFiles("templates/adm/subs_new", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_sbs_you = template.Must(template.ParseFiles("templates/adm/subs_you", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_sbs_pmt = template.Must(template.ParseFiles("templates/adm/pmt/paypal", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pbs_dee = template.Must(template.ParseFiles("templates/adm/pub_deet", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_pubs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_sbs_lin = template.Must(template.ParseFiles("templates/adm/subs_login", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pck_lst = template.Must(template.ParseFiles("templates/adm/pcks_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pck_one = template.Must(template.ParseFiles("templates/adm/pcks_one", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_sbs_prv = template.Must(template.ParseFiles("templates/adm/privacy", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_sbs_trm = template.Must(template.ParseFiles("templates/adm/terms", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
         dflt_ctgrs = []Category{Category{Name: "Docs", }, Category{Name: "News", }, Category{Name: "Gridwatch", }, Category{Name: "Leaderboard"}, Category{Name: "Community"}, Category{Name: "Github"}}
 	tmpl_grw = template.Must(template.ParseFiles("templates/adm/cmn/body1", "templates/adm/cmn/right", "templates/adm/cmn/center_grw", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 )
@@ -280,18 +287,18 @@ func startHttps() {
                 id, err := strconv.ParseInt(toks[3], 10, 64)
                 if err != nil {
                         glog.Infof("strconv: %v \n", err)
-                        render := Render1 {"Nothing to see here", &data.Packet{}, dflt_ctgrs}
+                        render := Render1 {Message: "Nothing to see here", Packet: &data.Packet{}, Categories: dflt_ctgrs}
                         _ = tmpl_adm_pck_lst.ExecuteTemplate(w, "base", render)
                         return
                 }
                 pk, err := data.GetLastPacket(id)
                 if err != nil {
                         glog.Infof("Https %v \n", err)
-                        render := Render1 {"Packets", &data.Packet{}, dflt_ctgrs}
+                        render := Render1 {Message: "Packets", Packet: &data.Packet{}, Categories: dflt_ctgrs}
                         _ = tmpl_adm_pck_one.ExecuteTemplate(w, "base", render)
                         return
                 }
-                render := Render1 {"Packets", pk, dflt_ctgrs}
+                render := Render1 {Message: "Packets", Packet: pk, Categories: dflt_ctgrs}
                 err = tmpl_adm_pck_one.ExecuteTemplate(w, "base", render)
                 if err != nil {
                         fmt.Printf("Https %v \n", err)
@@ -300,8 +307,8 @@ func startHttps() {
                 return
         }))
         mux.Handle("/api/", http.HandlerFunc(handleAPI))
-        mux.Handle("/subs/", http.HandlerFunc(handleSubs))
         mux.Handle("/pubs/", http.HandlerFunc(handlePubs))
+        mux.Handle("/subs/", http.HandlerFunc(handleSubs))
         mux.Handle("/admin/subs/", http.HandlerFunc(handleAdmin))
         mux.Handle("/admin/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
                 //pbs := make([]*data.Pub, 0)

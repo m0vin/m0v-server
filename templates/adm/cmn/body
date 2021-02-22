@@ -2,7 +2,7 @@
 <body>
   <div id="notification"></div>
   <div class="page full">
-    <div class="w-100">
+    <div class="wdth-100">
       <header id="header">
         <div id="logo"> <!--logo-->
           <a href="http://pv.b00m.in"><img src="/static/images/boom.png" title="B00MIN" alt="B00M" width="130px" height="44px"/>
@@ -10,26 +10,17 @@
         </div> <!--logo -->
 	<br>
 	<span id="welcome" class="hide-phone"> 
-	  <span id="welword">Welcome &nbsp;</span>
-	  <span id="user" > </span> 
-          <span id="login" class="item" > &nbsp; Login
-            <div class="drop-content">
-              <div class="drop-body">
-                <form id="userlogin">
-                  <input type="text" id="email" value="email"/>					
-                  <input type="password" id="pswd" value="pswd"/>					
-                  <input type="submit" value="Login"/>
-                </form>
-              </div>
-            </div>
-	     or <a href="/subs/new">Register</a>.
+	  {{if eq .User "new"}} 
+		  <span id="login" class="item" > &nbsp; <a href="/subs/login">Login</a>
+		     or <a href="/subs/new">Register</a>.
 	  </span>
-	  <span id="logout"> 
-	    <a href="/subs/logout"  > &nbsp; Logout </a>
-		  <!--<form id="userlogout">
-		    <input type="submit" value="Logout"/>
-		  </form>-->
-	  </span>
+	  {{else}}
+		  <span id="welword">Welcome &nbsp;</span>
+		  <span id="user"> {{.User}} </span> 
+		  <span id="logout"> 
+		    <a href="/subs/logout"  > &nbsp; Logout </a>
+		  </span>
+	  {{end}}
 	  <span id=result></span>
 	</span>
       </header>
