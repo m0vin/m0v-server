@@ -1,4 +1,4 @@
-module m0v.in/finisher
+module b00m.in/finisher
 
 require (
 	github.com/dhconnelly/rtreego v1.0.0
@@ -10,9 +10,11 @@ require (
 	rsc.io/quote v1.5.2
 )
 
-replace m0v.in/finisher/data => ./data
+replace b00m.in/finisher/data => ./data
 
-replace m0v.in/finisher/comms => ./comms
+replace b00m.in/finisher/comms => ./comms
+
+replace b00m.in/finisher/subs => ./subs
 
 //replace github.com/lib/pq => ../mygo/src/github.com/lib/pq
 

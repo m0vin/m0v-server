@@ -437,6 +437,54 @@ func GetAllPubsForSub(sub_id int64) ([]*Pub, error) {
         return pbs, nil
 }
 
+func GetPubFaultsForSub(sub_id int64) ([]*Pub, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select pub_id, created_at, latitude, longitude, hash from pub where creator=$1 and protected=false order by created_at desc limit $2", sub_id, 20)
+        if err != nil {
+                glog.Errorf("data.GetPubs %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        /*if !rows.Next() {
+                glog.Errorf("data.GetPubs no rows \n")
+                return nil, fmt.Errorf("No data for pub \n")
+        }*/
+        pbs := make([]*Pub, 0)
+        for rows.Next() {
+                pb := &Pub{}
+                if err := rows.Scan(&pb.Id, &pb.Created, &pb.Latitude, &pb.Longitude, &pb.Hash); err != nil {
+                        glog.Errorf("data.GetPubs %v \n", err)
+                        return pbs, fmt.Errorf("No data for pubs \n")
+                }
+                //glog.Infof("data.GetPubs appending \n")
+                pbs = append(pbs, pb)
+        }
+        return pbs, nil
+}
+
+func UpdatePubStatus(pub_hash int64) error {
+        db, err := GetDB()
+        if err != nil {
+                glog.Errorf("updatepubstatus getdb %v \n", err)
+                return err
+        }
+        result, err := db.Exec("update pub set protected=false where hash=$1", pub_hash)
+        if err != nil {
+                glog.Errorf("updatebpubstatus update %v \n", err)
+                return err
+        }
+        rows, err := result.RowsAffected()
+        if rows != 1 {
+                glog.Errorf("Expected to affect 1 row, affected %d", rows)
+                return fmt.Errorf("updatepubstatus no rows updated")
+        }
+        return nil
+}
+
 // GetPubDeviceName returns DeviceName for `pub_hash`from `confo`
 func GetPubDeviceName(pub_hash int64) (string, error){
         db, err := GetDB()
@@ -733,11 +781,13 @@ func PutConfo(confo *Confo) (uint64, error) {
                 glog.Error(err)
                 return 0, err
         }
-        // convert to timestamp
+        // check and convert to timestamp
         //created, err := time.Unix(confo.Created, 0).MarshalText()
         created, err := confo.Created.MarshalText()
-	if err != nil {
-                glog.Error(err)
+	if err != nil || confo.Created.Before(time.Date(2006,1,2,3,4,5,0,time.UTC)) {
+                if err != nil {
+                        glog.Error(err)
+                }
 		created, err = time.Now().MarshalText()
 	}
         result, err := db.Exec("insert into confo (devicename, ssid, created_at, hash) values ($1, $2, $3, $4)", confo.Devicename, confo.Ssid, string(created), confo.Hash)

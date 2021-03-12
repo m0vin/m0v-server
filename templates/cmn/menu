@@ -1,16 +1,15 @@
 {{define "menu"}}
-	{{range .Categories}}
-	  <li>
-            <!--CATEGORY LINK-->
-		<a href="/{{ .ToLower }}">{{ .Name }}</a>
-	    <div class="sub-arrow"></div>
-	    <div class="sub-content">
-	      <div class="sub-body">
-		<ul>
-                  <!--SUBCATEGORIES LINKS-->
-		</ul>
-	      </div>
-	    </div>
-	  </li>
+	{{range $k, $v := .Categories}}
+		<li>
+			<a href="{{ $v }}">{{ $k }}</a>
+			<div class="sub-arrow"></div>
+			<div class="sub-content">
+				<div class="sub-body">
+					<ul>
+					  <!--SUBCATEGORIES LINKS-->
+					</ul>
+				</div>
+			</div>
+		</li>
 	{{ end }} 
 {{end}}

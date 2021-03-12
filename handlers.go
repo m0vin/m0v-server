@@ -5,8 +5,8 @@ import (
         "fmt"
         "github.com/golang/glog"
         "io"
-	"m0v.in/finisher/data"
-	"m0v.in/finisher/comms"
+	"b00m.in/finisher/data"
+	"b00m.in/finisher/comms"
         "net/http"
         "strconv"
         "strings"
@@ -444,6 +444,37 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                 return
                         }
                         return
+                case "faults":
+                        if sub == "" {
+                                glog.Infof("handlesubs get pubs no cookie \n")
+                                render := Render {Message: "Login", Categories: dflt_ctgrs, User: "new"}
+                                err := tmpl_adm_sbs_lin.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: "new"}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        } else {
+                                glog.Infof("handlesubs get pubs %s : %d \n", sub, you.Id)
+                                pubs, err := data.GetPubFaultsForSub(you.Id)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "No pubs for you", Categories: dflt_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                render := Render {Message: "Faults", Pubs: pubs, Categories: dflt_ctgrs, User: you.Name}
+                                err = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        }
                 case "checkout":
                         if len(toks) == 3 { // /subs/checkout
                                 if sub == "" {

@@ -3,7 +3,7 @@ package main
 import (
         //"context"
 	"crypto"
-	"crypto/rand"
+	//"crypto/rand"
 	"crypto/x509"
 	"crypto/ecdsa"
 	"crypto/rsa"
@@ -13,17 +13,18 @@ import (
 	"flag"
 	"fmt"
         "github.com/golang/glog"
-        "golang.org/x/crypto/acme"
-        "golang.org/x/crypto/acme/autocert"
+        //"golang.org/x/crypto/acme"
+        //"golang.org/x/crypto/acme/autocert"
 	"html/template"
         "io/ioutil"
-	"m0v.in/finisher/data"
-	"m0v.in/finisher/comms"
+	"b00m.in/finisher/data"
+	"b00m.in/finisher/comms"
+	"b00m.in/finisher/subs"
         "net/http"
         "os"
         //"reflect"
         "regexp"
-	"rsc.io/quote"
+	//"rsc.io/quote"
         "strconv"
         "strings"
         "time"
@@ -33,7 +34,8 @@ type Render struct { //for most purposes
         Message string `json:"message"`
         Subs []*data.Sub `json:"subs,string"`
         Pubs []*data.Pub `json:"pubs,string"`
-        Categories []Category `json:"categories,string"`
+        //Categories []Category `json:"categories,string"`
+        Categories subs.Category `json:"categories,string"`
         User string
 }
 
@@ -42,7 +44,8 @@ type RenderOne struct { //for most purposes
         Sub *data.Sub `json:"sub,string"`
         Pub *data.Pub `json:"pub,string"`
         PubConfig *data.PubConfig `json:"pubconfig,string"`
-        Categories []Category `json:"categories,string"`
+        //Categories []Category `json:"categories,string"`
+        Categories subs.Category `json:"categories,string"`
         User string
 }
 
@@ -50,7 +53,8 @@ type Render1 struct { //for a packet
         Message string `json:"message"`
         //Sub sub `json:"sub"`
         Packet *data.Packet `json:"packet,string"`
-        Categories []Category `json:"categories,string"`
+        //Categories []Category `json:"categories,string"`
+        Categories subs.Category `json:"categories,string"`
         User string
 }
 
@@ -58,21 +62,21 @@ type Rendern struct { //for packets
         Message string `json:"message"`
         //Sub sub `json:"sub"`
         Packets []*data.Packet `json:"packet,string"`
-        Categories []Category `json:"categories,string"`
+        //Categories []Category `json:"categories,string"`
+        Categories subs.Category `json:"categories,string"`
         User string
 }
 
-type Category struct {
+/*type Category struct {
         Name string `json:"name"`
 }
 
 func (c *Category) ToLower() string {
-
         return strings.ToLower(c.Name)
-
-}
+}*/
 
 var (
+        cfg = flag.String("c", "config/b00m.config", "path to config file")
         oks *expvar.Int
         tlsoks *expvar.Int
         httpRto int
@@ -80,7 +84,7 @@ var (
         httpPort int
         httpsPort int
         redirectHttp bool
-        keyName = "./pv.b00m.in/b00m-key.pem" // "/home/sridhar/prod/b00m_tls/b00m-key.pem"
+        /*keyName = "./pv.b00m.in/b00m-key.pem" // "/home/sridhar/prod/b00m_tls/b00m-key.pem"
         keyGen = false
         privKey *rsa.PrivateKey
         man *autocert.Manager
@@ -89,7 +93,7 @@ var (
         prod2 = "https://acme-v02.api.letsencrypt.org/directory"
         reg1 = "https://acme-v01.api.letsencrypt.org/acme/reg"
         stag2 = "https://acme-staging-v02.api.letsencrypt.org/directory"
-        stag1 = "https://acme-staging.api.letsencrypt.org/directory"
+        stag1 = "https://acme-staging.api.letsencrypt.org/directory"*/
         cssFile = regexp.MustCompile("\\.css$")
         jsFile = regexp.MustCompile("\\.js$")
         staticfileserver = http.FileServer(http.Dir("static"))
@@ -109,12 +113,13 @@ var (
 	tmpl_adm_pck_one = template.Must(template.ParseFiles("templates/adm/pcks_one", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_sbs_prv = template.Must(template.ParseFiles("templates/adm/privacy", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_sbs_trm = template.Must(template.ParseFiles("templates/adm/terms", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
-        dflt_ctgrs = []Category{Category{Name: "Docs", }, Category{Name: "News", }, Category{Name: "Gridwatch", }, Category{Name: "Leaderboard"}, Category{Name: "Community"}, Category{Name: "Github"}}
+        //dflt_ctgrs = []Category{Category{Name: "Docs", }, Category{Name: "News", }, Category{Name: "Gridwatch", }, Category{Name: "Leaderboard"}, Category{Name: "Community"}, Category{Name: "Github"}}
+        dflt_ctgrs = subs.Category{}
 	tmpl_grw = template.Must(template.ParseFiles("templates/adm/cmn/body1", "templates/adm/cmn/right", "templates/adm/cmn/center_grw", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 )
 
 func init() {
-        data, err := ioutil.ReadFile(keyName)
+        /*data, err := ioutil.ReadFile(keyName)
         if err != nil {
                 fmt.Printf("%s %v \n", "Generate rsa key", err)
                 keyGen = true
@@ -131,13 +136,13 @@ func init() {
                 if priv == nil || !strings.Contains(priv.Type, "PRIVATE") {
                         fmt.Printf("%s \n", "Nil rsa key")
                         os.Exit(1) // no other option but to exit
-                        /*if key == nil {
-                                key, err = rsa.GenerateKey(rand.Reader, 2048)
-                                if err != nil {
-                                        fmt.Printf("%s \n", "Generating rsa key")
-                                        os.Exit(1) // no other option but to exit
-                                }
-                        }*/
+                        //if key == nil {
+                        //        key, err = rsa.GenerateKey(rand.Reader, 2048)
+                        //        if err != nil {
+                        //                fmt.Printf("%s \n", "Generating rsa key")
+                        //                os.Exit(1) // no other option but to exit
+                        //        }
+                        //}
                 }
                 signer, err := parsePrivateKey(priv.Bytes)
                 if err != nil {
@@ -153,24 +158,40 @@ func init() {
                 Prompt: autocert.AcceptTOS,
                 Cache: autocert.DirCache("./pv.b00m.in"), // ("/b00m.in/b00m_tls"), //"/home/sridhar/prod/b00m_tls"),
                 //HostPolicy: autocert.HostWhitelist("m0v.in", "www.m0v.in"),
-        }
+        }*/
         oks = expvar.NewInt("oks")
         tlsoks = expvar.NewInt("tlsoks")
         flag.IntVar(&httpRto, "wto", 10, "Read timeout")
         flag.IntVar(&httpWto, "rto", 10, "Write timeout")
-        flag.IntVar(&httpPort, "http_port", 80, "Http server port")
-        flag.IntVar(&httpsPort, "https_port", 443, "Http server port")
-        flag.BoolVar(&redirectHttp, "redirect_http", true, "Redirect http to https")
-
+        //flag.IntVar(&httpPort, "http_port", 80, "Http server port")
+        //flag.IntVar(&httpsPort, "https_port", 443, "Http server port")
+        //flag.BoolVar(&redirectHttp, "redirect_http", false, "Redirect http to https")
 }
 
 func main() {
-	fmt.Println(quote.Hello())
+	glog.Infof("%s \n", "subs server starting...")
+        config, err := subs.ConfigureConfig(os.Args[1:])
+        if err != nil {
+                glog.Errorf("configureconfig %v \n", err)
+        }
 	flag.Parse()
+        s, err := subs.NewServer(config)
+        if err != nil {
+                glog.Errorf("newserver %v \n", err)
+        }
+        s.Start()
+        dflt_ctgrs = s.Cfg.Categories
+        p, err := strconv.Atoi(s.Cfg.HTTPPort)
+        if err != nil {
+                glog.Errorf("strconv httpport exiting %v \n", err)
+                return
+        }
+        httpPort = p
+        redirectHttp = false
         b := make(chan bool, 1)
         newregs = make(chan comms.Entity, 3)
-	data.CacheGeoJSON()
-	data.LoadStations()
+	//data.CacheGeoJSON()
+	//data.LoadStations()
 	//data.LoadPubdeetsLocal()
 	//if err := data.LoadPubdeets(); err != nil {
 	if err := data.LoadDummyPubdeets(); err != nil {
@@ -335,7 +356,7 @@ func startHttps() {
                 ReadTimeout: time.Duration(httpRto) * time.Second,
                 WriteTimeout: time.Duration(httpWto) * time.Second,
                 Addr: fmt.Sprintf(":%d", httpsPort), //":https", //
-                TLSConfig: man.TLSConfig(),
+                //TLSConfig: man.TLSConfig(),
                 Handler: mux,
         }
         err := hs.ListenAndServeTLS("", "")

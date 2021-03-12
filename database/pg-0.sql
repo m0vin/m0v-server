@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS pub (
 	altitude REAL NOT NULL,
 	orientation REAL NOT NULL,
 	hash INTEGER NOT NULL UNIQUE,
-	creator INTEGER
+	creator INTEGER,
+	protected BOOLEAN default TRUE
 );
 
 CREATE TABLE IF NOT EXISTS pubconfig (
