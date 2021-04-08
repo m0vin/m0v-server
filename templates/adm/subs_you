@@ -1,8 +1,8 @@
 {{define "subs_admin"}}
-<h2>Subscriber</h2>
+<h2>{{.Message}}</h2>
 <section class="standart">
   <div class="form-inline">
-    <form action="https://pv.b00m.in/subs/you/" method="post" enctype="application/x-www-form-urlencoded" id="useredit" name="useredit"> 
+    <form action="/subs/you/" method="post" enctype="application/x-www-form-urlencoded" id="useredit" name="useredit"> 
       <table>
 	<tr>
 	    <td>

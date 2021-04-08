@@ -116,6 +116,6 @@
 	}
 
 	
-
-	loadPubs();
+	paginate("pubs");
+	//loadPubs();
 	//loadPubsLocal();

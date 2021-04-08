@@ -347,6 +347,7 @@ func handlePubs(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleSubs(w http.ResponseWriter, r *http.Request) {
+        var err error
         sub := ""
         var you *data.Sub
         // check cookie
@@ -505,6 +506,13 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                 _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
                                 return
                         }
+                case "contact":
+                        render := Render {Message: "Contact",  Categories: dflt_ctgrs, User: you.Name}
+                        err = tmpl_adm_sbs_cnt.ExecuteTemplate(w, "base", render)
+                        if err != nil {
+                                glog.Errorf("privacy %v \n", err)
+                        }
+                        return
                 case "list":
                         if sub == "" {
                                 glog.Infof("handlesubs get list no cookie \n")
@@ -572,13 +580,43 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                 }
                                 return
                         } else {
-                                http.SetCookie(w, &http.Cookie{Name: "sub", Value: "gst", Domain:"b00m.in", Path: "/", MaxAge: -300, HttpOnly: true, Expires: time.Now().Add(time.Second * -120)})
+                                http.SetCookie(w, &http.Cookie{Name: "sub", Value: "gst", Domain:"b00m.in", Path: "/", MaxAge: -600, HttpOnly: true, Expires: time.Now().Add(time.Second * -120)})
                                 glog.Infof("handlesubs get logout %s \n", sub)
                                 render := Render {Message: "Login", Categories: dflt_ctgrs, User: "new"}
                                 err := tmpl_adm_sbs_lin.ExecuteTemplate(w, "base", render)
                                 if err != nil {
                                         glog.Errorf("Https %v \n", err)
                                         rendere := Render{Message: "Render error", Categories: dflt_ctgrs}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        }
+                case "orders": // /subs/orders
+                        if sub == "" {
+                                w.WriteHeader(http.StatusOK)
+                                render := Render {Message: "Please login!", Categories: dflt_ctgrs, User: you.Name}
+                                err = tmpl_adm_sbs_lin.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        return
+                                }
+                                return
+
+                        } else {
+                                carts, err := data.GetCarts(sub)
+                                if err != nil {
+                                        glog.Errorf("getcarts %v \n", err)
+                                        if carts == nil {
+                                                carts = make([]*data.Cart, 0)
+                                        }
+                                }
+                                w.WriteHeader(http.StatusOK)
+                                render := Render {Message: "Your Orders", Categories: dflt_ctgrs, User: you.Name,  Carts: carts}
+                                err = tmpl_gds_ods.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: you.Name}
                                         _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
                                         return
                                 }
@@ -687,7 +725,10 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                         return
                 case "privacy":
                         render := Render {Message: "Privacy Policy", Categories: dflt_ctgrs, User: you.Name}
-                        _ = tmpl_adm_sbs_prv.ExecuteTemplate(w, "base", render)
+                        err = tmpl_adm_sbs_prv.ExecuteTemplate(w, "base", render)
+                        if err != nil {
+                                glog.Errorf("privacy %v \n", err)
+                        }
                         return
                 case "terms":
                         render := Render {Message: "Terms & Conditions", Categories: dflt_ctgrs, User: you.Name}
@@ -741,7 +782,7 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                 // success
                                 newregs <- comms.Entity{e, n} // put in channel to send email
                                 glog.Infof("handleSubs set cookie %s \n", e)
-                                http.SetCookie(w, &http.Cookie{Name: "sub", Value: e, Domain:"b00m.in", Path: "/", MaxAge: 300, HttpOnly: true, Expires: time.Now().Add(time.Second * 120)})
+                                http.SetCookie(w, &http.Cookie{Name: "sub", Value: e, Domain:"b00m.in", Path: "/", MaxAge: 600, HttpOnly: true, Expires: time.Now().Add(time.Second * 600)})
                                 glog.Infof("handlesubs post putsubs %s %d \n", n, id)
                                 render := Render{Message: "Welcome " + n, Categories: dflt_ctgrs, User: you.Name}
                                 _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
@@ -756,6 +797,19 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                         if sub == "" {
                                 glog.Infof("handlesubs post sub/login w/o sub \n")
                                 v := r.Form
+                                agr := v.Get("agree")
+                                if agr != "1" {
+                                        glog.Infof("agreed: %v \n", agr)
+                                        render := Render {Message: "Login - please agree to Privacy Policy", Categories: dflt_ctgrs, User: "new"}
+                                        err := tmpl_adm_sbs_lin.ExecuteTemplate(w, "base", render)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: "new"}
+                                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        return
+                                }
                                 e := v.Get("email")
                                 pw := v.Get("pswd")
                                 s, err := data.GetSubByEmail(e)
@@ -773,7 +827,7 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                 }
                                 // success
                                 glog.Infof("handleSubs post login set cookie %s \n", e)
-                                http.SetCookie(w, &http.Cookie{Name: "sub", Value: e, Domain:"b00m.in", Path: "/", MaxAge: 300, HttpOnly: true, Expires: time.Now().Add(time.Second * 600)})
+                                http.SetCookie(w, &http.Cookie{Name: "sub", Value: e, Domain:"b00m.in", Path: "/", MaxAge: 600, HttpOnly: true, Expires: time.Now().Add(time.Second * 600)})
                                 you = s
                                 glog.Infof("handlesubs post login %s %s \n", s.Name, e)
                                 render := Render{Message: "Welcome " + s.Name, Categories: dflt_ctgrs, User: you.Name}
@@ -857,6 +911,69 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                         _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
                                         return
                                 }
+                        }
+                case "you": // /subs/you
+                        if sub == "" {
+                                render := Render {Message: "Login - please try again", Categories: dflt_ctgrs, User: "new"}
+                                err := tmpl_adm_sbs_lin.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: "new"}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        }
+                        v := r.Form
+                        oldp := v.Get("old_password")
+                        newp := v.Get("password")
+                        conf := v.Get("confirm")
+                        if conf != newp {
+                                render := RenderOne {Message: "You - password not changed - try again", Sub: you, Categories: dflt_ctgrs, User: you.Name}
+                                err := tmpl_adm_sbs_you.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: "new"}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        } else {
+                                check := data.CheckPswd(sub, oldp)
+                                if !check {
+                                        glog.Errorf("/subs/you post check pswd %v \n", oldp)
+                                        render := RenderOne {Message: "You - password not changed - try again", Sub: you, Categories: dflt_ctgrs, User: you.Name}
+                                        err := tmpl_adm_sbs_you.ExecuteTemplate(w, "base", render)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: "new"}
+                                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        return
+                                }
+                                err := data.UpdateSub(&data.Sub{Email: sub, Pswd: newp})
+                                if err != nil {
+                                        render := RenderOne {Message: "You - password not changed - try again", Sub: you, Categories: dflt_ctgrs, User: you.Name}
+                                        err := tmpl_adm_sbs_you.ExecuteTemplate(w, "base", render)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: "new"}
+                                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        return
+                                }
+                                http.SetCookie(w, &http.Cookie{Name: "sub", Value: sub, Domain:"b00m.in", Path: "/", MaxAge: 600, HttpOnly: true, Expires: time.Now().Add(time.Second * 600)})
+                                render := RenderOne {Message: "You - password changed", Sub: you, Categories: dflt_ctgrs, User: you.Name}
+                                err = tmpl_adm_sbs_you.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: "new"}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
                         }
                 default:
                         glog.Infof("No posting at %s \n", r.URL.Path)

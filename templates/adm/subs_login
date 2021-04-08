@@ -1,5 +1,5 @@
 {{define "subs_admin"}}
-<h2>Login</h2>
+<h2>{{.Message}}</h2>
 <section class="standart">
   <div class="form-inline">
     <form action="/subs/login/" method="post" enctype="application/x-www-form-urlencoded" id="usernew" name="usernew"> 

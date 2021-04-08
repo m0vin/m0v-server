@@ -109,11 +109,12 @@ body * {
 }
 
 .pie-charts {
+  float: left;
   display: -webkit-box;
   display: flex;
-  -webkit-box-orient: horizontal;
+  -webkit-box-orient: vertical; /*horizontal;*/
   -webkit-box-direction: normal;
-          flex-direction: row;
+          flex-direction: column; /*row;*/
 }
 @media (max-width: 500px) {
   .pie-charts {

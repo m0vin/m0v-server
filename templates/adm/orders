@@ -1,0 +1,36 @@
+{{define "orders"}}
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Ensures optimal rendering on mobile devices. -->
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" /> <!-- Optimal Internet Explorer compatibility -->
+</head>
+<div id="pivot">
+	<div id="content">
+		<div id="content-center">
+			<h1> Orders </h1>
+			<table class="table" style="width: 100%;">
+				<thead>
+					<tr>
+						<td class="ta-left">ID</td>
+						<td class="ta-left">Platform</td>
+						<td class="ta-right">Subtotal</td>
+						<td class="ta-right">Total</td>
+						<td class="ta-right">Action</td>
+					</tr>
+				</thead>
+				<tbody>
+					{{range .Carts}}
+						<tr>	    
+							<td class="ta-right">{{.RefID}}</td>	    
+							<td class="ta-right">{{.Platform}}</td>	    
+							<td class="ta-right">{{.Ccy}}{{.Subtotal}}</td>	    
+							<td class="ta-right">{{.Ccy}}{{.Total}} </td>	
+							<td class="ta-right"> Cancel/Return </td>	
+						</tr>					    
+					{{end}}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+{{end}}

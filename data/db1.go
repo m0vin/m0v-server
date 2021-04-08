@@ -564,7 +564,7 @@ func UpdatePubConfig(pubc *PubConfig) error {
         }
         result, err := db.Exec("update pubconfig set kwp = $1, kwpmake = $2, kwr = $3, kwrmake = $4 where pubconfig.pub_hash = $5", pubc.Kwp, pubc.Kwpmake, pubc.Kwr, pubc.Kwrmake, pubc.Hash)
         if err != nil {
-                glog.Error("Couldn't update pub %v\n", err)
+                glog.Errorf("Couldn't update pub %v \n", err)
                 return err
         }
         rows, err := result.RowsAffected()
@@ -615,6 +615,25 @@ func PutSub(sub *Sub) (uint64, error) {
                 return uint64(rows) , err
         }
         return uint64(rows), nil
+}
+
+func UpdateSub(sub *Sub) error {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return err
+        }
+        result, err := db.Exec("update sub set pswd=$1 where email=$2", sub.Pswd, sub.Email)
+        if err != nil {
+                glog.Errorf("Couldn't update pub %v \n", err)
+                return err
+        }
+        rows, err := result.RowsAffected()
+        if rows != 1 {
+                glog.Errorf("Expected to affect 1 row, affected %d", rows)
+                return fmt.Errorf("sub %s not updated", sub.Email)
+        }
+        return nil
 }
 
 func GetSubByEmail(email string) (*Sub, error) {

@@ -5,6 +5,7 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/lib/pq v1.0.0
 	github.com/paulmach/go.geojson v1.4.0
+	github.com/plutov/paypal/v4 v4.0.0
 	github.com/smira/go-point-clustering v1.0.1
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
 	rsc.io/quote v1.5.2

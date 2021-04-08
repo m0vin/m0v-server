@@ -37,6 +37,7 @@ type Render struct { //for most purposes
         //Categories []Category `json:"categories,string"`
         Categories subs.Category `json:"categories,string"`
         User string
+        Carts []*data.Cart
 }
 
 type RenderOne struct { //for most purposes
@@ -99,6 +100,9 @@ var (
         staticfileserver = http.FileServer(http.Dir("static"))
         newregs chan comms.Entity
         // templates
+        funcMap = template.FuncMap{
+                "mult": Multiply,
+        }
         tmpl_index = template.Must(template.ParseFiles("static/index.html"))
 	tmpl_root = template.Must(template.ParseFiles("templates/root"))
 	tmpl_adm_err = template.Must(template.ParseFiles("templates/adm/error", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_errs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
@@ -111,12 +115,19 @@ var (
 	tmpl_adm_sbs_lin = template.Must(template.ParseFiles("templates/adm/subs_login", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pck_lst = template.Must(template.ParseFiles("templates/adm/pcks_list", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_pck_one = template.Must(template.ParseFiles("templates/adm/pcks_one", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
-	tmpl_adm_sbs_prv = template.Must(template.ParseFiles("templates/adm/privacy", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_sbs_prv = template.Must(template.ParseFiles("templates/adm/privacy", "templates/adm/cmn/body-vha", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
+	tmpl_adm_sbs_cnt = template.Must(template.ParseFiles("templates/adm/contact", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_sbs_trm = template.Must(template.ParseFiles("templates/adm/terms", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
+        tmpl_gds_ods = template.Must(template.New("tmpl_gds_orders").Funcs(funcMap).ParseFiles("templates/adm/orders", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_orders", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head", "templates/cmn/menu", "templates/cmn/footer"))
         //dflt_ctgrs = []Category{Category{Name: "Docs", }, Category{Name: "News", }, Category{Name: "Gridwatch", }, Category{Name: "Leaderboard"}, Category{Name: "Community"}, Category{Name: "Github"}}
         dflt_ctgrs = subs.Category{}
 	tmpl_grw = template.Must(template.ParseFiles("templates/adm/cmn/body1", "templates/adm/cmn/right", "templates/adm/cmn/center_grw", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 )
+
+func Multiply(a float64, b int) (float64){
+        f64 := a * float64(b)
+        return f64
+}
 
 func init() {
         /*data, err := ioutil.ReadFile(keyName)
