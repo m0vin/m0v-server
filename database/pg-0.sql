@@ -33,7 +33,9 @@ CREATE TABLE IF NOT EXISTS pubconfig (
 	kwh_life REAL,
 	since TIMESTAMPTZ default current_timestamp,
 	visits_last TIMESTAMPTZ default current_timestamp,
-	visits_life INTEGER
+	visits_life INTEGER,
+	notify BOOLEAN default FALSE,
+	lastnotified TIMESTAMPTZ default current_timestamp
 );
 
 CREATE TABLE IF NOT EXISTS sub (
@@ -89,3 +91,60 @@ CREATE TABLE IF NOT EXISTS confo (
 
 /*CREATE INDEX sub_index ON coordinate(user_id);*/
 CREATE INDEX packet_index ON packet(id);
+
+CREATE TABLE IF NOT EXISTS hourly (
+	pub_hash INTEGER NOT NULL REFERENCES pub(hash),
+	timestamp TIMESTAMPTZ,
+	voltage_max REAL,
+	voltage_min REAL,
+	voltage_ave REAL,
+	voltage_exceptions INTEGER,
+	frequency_max REAL,
+	frequency_min REAL,
+	frequency_ave REAL,
+	frequency_exceptions INTEGER,
+	import_active_energy REAL,
+	export_active_energy REAL,
+	import_reactive_energy REAL,
+	export_reactive_energy REAL,
+	total_active_energy REAL,
+	total_reactive_energy REAL
+);
+
+CREATE TABLE IF NOT EXISTS daily (
+	pub_hash INTEGER NOT NULL REFERENCES pub(hash),
+	timestamp TIMESTAMPTZ,
+	voltage_max REAL,
+	voltage_min REAL,
+	voltage_ave REAL,
+	voltage_exceptions INTEGER,
+	frequency_max REAL,
+	frequency_min REAL,
+	frequency_ave REAL,
+	frequency_exceptions INTEGER,
+	import_active_energy REAL,
+	export_active_energy REAL,
+	import_reactive_energy REAL,
+	export_reactive_energy REAL,
+	total_active_energy REAL,
+	total_reactive_energy REAL
+);
+
+CREATE TABLE IF NOT EXISTS monthly (
+	pub_hash INTEGER NOT NULL REFERENCES pub(hash),
+	timestamp TIMESTAMPTZ,
+	voltage_max REAL,
+	voltage_min REAL,
+	voltage_ave REAL,
+	voltage_exceptions INTEGER,
+	frequency_max REAL,
+	frequency_min REAL,
+	frequency_ave REAL,
+	frequency_exceptions INTEGER,
+	import_active_energy REAL,
+	export_active_energy REAL,
+	import_reactive_energy REAL,
+	export_reactive_energy REAL,
+	total_active_energy REAL,
+	total_reactive_energy REAL
+);

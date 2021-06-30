@@ -59,7 +59,7 @@
 
 // Table
 
-	var $th = '', $n = 20, $tr = [], $table, $i, $ii, $j, $pageCount;
+	var $th = '', $n = 25, $tr = [], $table, $i, $ii, $j, $pageCount;
 	function paginate(tdn) {
 		$table = document.getElementById(tdn);
 		var $rowCount = $table.rows.length,
@@ -74,7 +74,7 @@
 			for ($i = $j,$ii = 0; $i < $rowCount; $i++, $ii++)
 			$tr[$ii] = $table.rows[$i].outerHTML;
 			// create a div block to hold the buttons
-			$table.insertAdjacentHTML("afterend","<div id='buttons' ></div");
+			$table.insertAdjacentHTML("afterend","<div id='buttons' style='display:inline;'></div>");
 			// the first sort, default page is the first one
 			sort(1);
 		}

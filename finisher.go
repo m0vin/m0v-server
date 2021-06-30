@@ -68,6 +68,12 @@ type Rendern struct { //for packets
         User string
 }
 
+type Fault struct {
+        Entity comms.Entity
+        Hash int64
+        Nickname string
+}
+
 /*type Category struct {
         Name string `json:"name"`
 }
@@ -99,6 +105,7 @@ var (
         jsFile = regexp.MustCompile("\\.js$")
         staticfileserver = http.FileServer(http.Dir("static"))
         newregs chan comms.Entity
+        newfaults chan Fault
         // templates
         funcMap = template.FuncMap{
                 "mult": Multiply,
@@ -201,6 +208,7 @@ func main() {
         redirectHttp = false
         b := make(chan bool, 1)
         newregs = make(chan comms.Entity, 3)
+        newfaults = make(chan Fault, 10)
 	//data.CacheGeoJSON()
 	//data.LoadStations()
 	//data.LoadPubdeetsLocal()
@@ -434,7 +442,7 @@ func parsePrivateKey(der []byte) (crypto.Signer, error) {
 	return nil, errors.New("acme/autocert: failed to parse private key")
 }
 
-// loadPubDdeets also listens on channel to recieve data of new registrants to send email
+// loadPubDdeets also listens on channel to recieve data of new registrants to send email. It also listens on a channel to send email notifications of faults to subscribers
 func loadPubdeets() {
         from := comms.Entity{"rcs@b00m.in", "RCS"}
         to := make([]comms.Entity, 0)
@@ -446,11 +454,34 @@ func loadPubdeets() {
                         err := comms.SendMail(from, to, "Welcome to B00M","Welcome. Please verify your email https://pv.b00m.in/subs/verify/" + sha1str)
                         if err != nil {
                                 glog.Infof("comms.SendEmail %v \n", err)
+                        } else {
+
+                                glog.Infof("comms.SendEmail newreg %v \n", newreg.Email)
+                        }
+                        to = to[:0]
+                case newfault:= <-newfaults:
+                        to = append(to, newfault.Entity)
+                        err := comms.SendMail(from, to, "B00M Fault!", fmt.Sprintf("Please check on %s - %d \n", newfault.Nickname, newfault.Hash))
+                        if err != nil {
+                                glog.Infof("comms.SendMail %v \n", err)
+                        } else {
+                                glog.Infof("comms.SendMail fault %v email %v \n", newfault.Nickname, newfault.Entity.Email)
+                                // email sent so update pubconfig.lastnotified time and pub.protected
+                                if err := data.UpdatePubStatus(newfault.Hash); err != nil {
+                                        glog.Errorf("updatelastnotified %v \n", err)
+                                }
                         }
                         to = to[:0]
                 case <-time.After(time.Duration(600 * time.Second)):
                         if err := data.LoadDummyPubdeets(); err != nil {
                                 glog.Infof("data.LoadStations %v \n", err)
+                        }
+                        faults, err := data.GetPubFaults(true)
+                        if err!= nil {
+                                glog.Infof("data.LoadFaults %v \n", err)
+                        }
+                        for _, fault := range faults {
+                                newfaults <- Fault{comms.Entity{fault.Email, fault.Name}, fault.Hash, fault.Nickname}
                         }
                 }
         }

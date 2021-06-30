@@ -150,6 +150,38 @@ func handleAPI(w http.ResponseWriter, r *http.Request) {
                         return
                 case "packets":
                         return
+                case "summary": // /api/summary/hourly/2021-Jan-01/2021-Jan-31
+                        var err error
+                        freq := "hourly"
+                        from := time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC)
+                        to := time.Date(2021, time.January, 31, 0, 0, 0, 0, time.UTC)
+                        const shortform = "2006-Jan-02"
+                        if len(toks) > 3 {
+                                freq = toks[3]
+                                if len(toks) > 4 {
+                                        from, err = time.Parse(shortform, toks[4])
+                                        if err != nil {
+                                                glog.Errorf("time.Parse %v \n", err)
+                                        }
+                                        if len(toks) > 5 {
+                                                to, err = time.Parse(shortform, toks[5])
+                                                if err != nil {
+                                                        glog.Errorf("time.Parse %v \n", err)
+                                                }
+                                        }
+                                }
+                        }
+                        ss, err := data.GetSummaries(from, to, freq)
+                        if err != nil {
+                                glog.Errorf("GetSummaries %v \n", err)
+                        }
+                        err = json.NewEncoder(w).Encode(ss)
+                        if err != nil {
+                                glog.Errorf("json.Encode %v \n", err)
+                                str := fmt.Sprintf("Couldn't encode results: %s", err)
+                                http.Error(w, str, 500)
+                                return
+                        }
                 }
         case "POST":
                 err := r.ParseForm()
@@ -889,7 +921,12 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                         _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
                                         return
                                 }
-                                pc := &data.PubConfig{Hash:int64(hash), Kwp: float32(kwp), Kwpmake: kwpm, Kwr: float32(kwr), Kwrmake: kwrm}
+                                notify := v.Get("notify")
+                                notific := false
+                                if notify == "on" {
+                                        notific = true
+                                }
+                                pc := &data.PubConfig{Hash:int64(hash), Kwp: float32(kwp), Kwpmake: kwpm, Kwr: float32(kwr), Kwrmake: kwrm, Notify: notific}
                                 if err := data.UpdatePubConfig(pc); err != nil {
                                         glog.Errorf("Https handlesubs post putpubconfig %v \n", err)
                                         rendere := Render{Message: "Couldn't update pub", Categories: dflt_ctgrs, User: you.Name}

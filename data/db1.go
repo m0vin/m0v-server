@@ -59,7 +59,7 @@ type Coordinate struct {
 }
 
 type Packet struct {
-        Id int64 `json:"id!`
+        Id int64 `json:"id"` // this corresponds to pub_hash in table packet 
         Timestamp time.Time `json:"timestamp,omitempty"`
         Status bool `json:"status"`
         Voltage float64 `json:"voltage"`
@@ -124,6 +124,12 @@ type PubConfig struct {
         Visitslast time.Time `json:"visitslast,omitempty"`
         Visitslife int `json:"visitslife,omitempty"`
         LastUpdated time.Time
+        Notify bool `json:"notify,omitempty"`
+        LastNotified time.Time `json:"lastnotified,omitempty"`
+}
+
+func (p *PubConfig) FormattedLastNotified() string {
+        return p.LastNotified.Format("2006-01-02 15:04:05")
 }
 
 type Dummies []*PubDummy
@@ -141,7 +147,10 @@ type PubDummy struct {
         Kwlast float32 `json:"kwlast,omitempty"`
         Kwhday float32 `json:"kwhday,omitempty"`
         Kwhlife float32 `json:"kwhlife,omitempty"`
-        Creator int64 `json:"email"`
+        Creator int64 `json:"creator,omitempty"`
+        Email string `json:"email,omitempty"`
+        Name string `json:"name,omitempty"`
+        LastNotified time.Time `json:"lastnotified,omitempty"`
 }
 func (ds Dummies) Len() int {
         return len(ds)
@@ -281,7 +290,7 @@ func GetPubConfigByHash(hash int64) (*PubConfig, error) {
                 glog.Error(err)
                 return nil, err
         }
-        rows, err := db.Query("select pub_hash, nickname, kwp, kwpmake, kwr, kwrmake from pubconfig where pub_hash=$1 order by since desc limit 1", hash)
+        rows, err := db.Query("select pub_hash, nickname, kwp, kwpmake, kwr, kwrmake, notify, lastnotified from pubconfig where pub_hash=$1 order by since desc limit 1", hash)
         if err != nil {
                 glog.Errorf("data.GetPubByHash %v \n", err)
                 return nil, err
@@ -292,7 +301,7 @@ func GetPubConfigByHash(hash int64) (*PubConfig, error) {
                 return nil, fmt.Errorf("No data for hash: %d \n", hash)
         }
         pc := &PubConfig{}
-        err = rows.Scan(&pc.Hash, &pc.Nickname, &pc.Kwp, &pc.Kwpmake, &pc.Kwr, &pc.Kwrmake)
+        err = rows.Scan(&pc.Hash, &pc.Nickname, &pc.Kwp, &pc.Kwpmake, &pc.Kwr, &pc.Kwrmake, &pc.Notify, &pc.LastNotified)
         if err != nil {
                 glog.Errorf("data.GetPubByHash %v \n", err)
                 return nil, err
@@ -466,6 +475,60 @@ func GetPubFaultsForSub(sub_id int64) ([]*Pub, error) {
         return pbs, nil
 }
 
+// GetPubFaults queries table packet for the latest `unprotected` packet from a pub in the latest 100 packets received where notify config for that pub is true. Either fix, turn notify off or receive daily emails. 
+func GetPubFaults(withCreator bool) (Dummies, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select distinct on (pub_hash) packet.pub_hash, pubconfig.nickname, pubconfig.lastnotified from packet inner join pubconfig using(pub_hash) where pubconfig.notify=true and packet.protected=false order by pub_hash, created_at desc limit 10")
+        if err != nil {
+                glog.Errorf("data.GetPubs %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        /*if !rows.Next() {
+                glog.Errorf("data.GetPubs no rows \n")
+                return nil, fmt.Errorf("No data for pub \n")
+        }*/
+        pbs := make(Dummies, 0)
+        for rows.Next() {
+                pb := &PubDummy{}
+                if err := rows.Scan(&pb.Hash, &pb.Nickname, &pb.LastNotified); err != nil {
+                        glog.Errorf("data.GetPubFaults %v \n", err)
+                        return pbs, fmt.Errorf("No data for pubfaults \n")
+                }
+                // append only if last notified more than 24 hours ago
+                if pb.LastNotified.Before(time.Now().Add(time.Hour * -24)) {
+                        pbs = append(pbs, pb)
+                }
+        }
+        if len(pbs) == 0 {
+                glog.Infof("No faulty packets found! ")
+        }
+        // still need to populate the creator, email, name fields
+        if withCreator {
+                for _, pb:= range pbs {
+                        rows1, err := db.Query("select sub.sub_id, sub.email, sub.name from sub inner join pub on sub.sub_id=pub.creator where pub.hash=$1 limit 1", pb.Hash)
+                        if err != nil {
+                                glog.Errorf("data.GetPubFaults wcreator %v \n", err)
+                                return nil, err
+                        }
+                        defer rows1.Close()
+                        for rows1.Next() {
+                                err = rows1.Scan(&pb.Creator, &pb.Email, &pb.Name)
+                                if err != nil {
+                                        glog.Errorf("data.GetPubFaults wcreator scan %v \n", err)
+                                        return nil, err
+                                }
+                        }
+                }
+        }
+        return pbs, nil
+}
+
+//UpdatePubStatus updates `pub.protected` and `pubconfig.lastnotified` in two separate update queries
 func UpdatePubStatus(pub_hash int64) error {
         db, err := GetDB()
         if err != nil {
@@ -481,6 +544,16 @@ func UpdatePubStatus(pub_hash int64) error {
         if rows != 1 {
                 glog.Errorf("Expected to affect 1 row, affected %d", rows)
                 return fmt.Errorf("updatepubstatus no rows updated")
+        }
+        result, err = db.Exec("update pubconfig set lastnotified=NOW() where pub_hash=$1", pub_hash)
+        if err != nil {
+                glog.Errorf("updatebpubstatus setlastnotified %v \n", err)
+                return err
+        }
+        rows, err = result.RowsAffected()
+        if rows != 1 {
+                glog.Errorf("Expected to affect 1 row, affected %d", rows)
+                return fmt.Errorf("updatepubstatus setlastnotified no rows updated")
         }
         return nil
 }
@@ -538,7 +611,7 @@ func PutPubConfig(pubc *PubConfig) (uint64, error) {
                 glog.Error(err)
                 return 0, err
         }
-        result, err := db.Exec("insert into pubconfig (pub_hash, nickname, kwp, kwpmake, kwr, kwrmake) values ($1, $2, $3, $4, $5, $6)", pubc.Hash, pubc.Nickname, pubc.Kwp, pubc.Kwpmake, pubc.Kwr, pubc.Kwrmake)
+        result, err := db.Exec("insert into pubconfig (pub_hash, nickname, kwp, kwpmake, kwr, kwrmake, notify) values ($1, $2, $3, $4, $5, $6, $7)", pubc.Hash, pubc.Nickname, pubc.Kwp, pubc.Kwpmake, pubc.Kwr, pubc.Kwrmake, pubc.Notify)
         if err != nil {
                 glog.Error(err)
                 return 0 , err
@@ -562,7 +635,7 @@ func UpdatePubConfig(pubc *PubConfig) error {
                 glog.Error("update pubconfig no hash provided  \n")
                 return fmt.Errorf("invald hash : %d \n", pubc.Hash)
         }
-        result, err := db.Exec("update pubconfig set kwp = $1, kwpmake = $2, kwr = $3, kwrmake = $4 where pubconfig.pub_hash = $5", pubc.Kwp, pubc.Kwpmake, pubc.Kwr, pubc.Kwrmake, pubc.Hash)
+        result, err := db.Exec("update pubconfig set kwp = $1, kwpmake = $2, kwr = $3, kwrmake = $4, notify = $5 where pubconfig.pub_hash = $6", pubc.Kwp, pubc.Kwpmake, pubc.Kwr, pubc.Kwrmake, pubc.Notify, pubc.Hash)
         if err != nil {
                 glog.Errorf("Couldn't update pub %v \n", err)
                 return err
@@ -928,6 +1001,32 @@ func GetLastPackets(pubHash int64, limit int) ([]*Packet, error) {
                 return nil, err
         }
         rows, err := db.Query("select id, created_at, voltage, frequency, protected, active_power, apparent_power, reactive_power, power_factor, import_active_energy, export_active_energy, import_reactive_energy, export_reactive_energy, total_active_energy, total_reactive_energy from packet where pub_hash=$1 order by created_at desc limit $2", pubHash, limit)
+        if err != nil {
+                glog.Errorf("data.GetLastPacket %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        pcks := make([]*Packet, 0)
+        for rows.Next() {
+                pck := &Packet{}
+                if err := rows.Scan(&pck.Id, &pck.Timestamp, &pck.Voltage, &pck.Frequency, &pck.Status, &pck.ActiPwr, &pck.AppaPwr, &pck.ReacPwr, &pck.PwrFctr, &pck.ImActEn, &pck.ExActEn, &pck.ImRctEn, &pck.ExRctEn, &pck.TlActEn, &pck.TlRctEn); err != nil {
+                        glog.Errorf("data.GetLastPackets %v \n", err)
+                        return pcks, fmt.Errorf("No data for packets \n")
+                }
+                //glog.Infof("data.GetSubs appending \n")
+                pcks = append(pcks, pck)
+        }
+        return pcks, nil
+}
+
+//GetPackets queries for packets for all pubs from (exclusive) to (inclusive) times provided as argument
+func GetPackets(from, to time.Time) ([]*Packet, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query(getpackets, from, to)
         if err != nil {
                 glog.Errorf("data.GetLastPacket %v \n", err)
                 return nil, err

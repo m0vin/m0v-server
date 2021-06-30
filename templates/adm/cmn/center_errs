@@ -1,0 +1,12 @@
+{{define "center"}}
+
+	<div id="content-center">
+          <!--ADMINENTRY-->
+	  {{template "error" .}}
+          <div id="rising_sun">
+
+          </div>
+        </div>        
+
+
+{{end}}

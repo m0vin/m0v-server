@@ -7,6 +7,7 @@ require (
 	github.com/paulmach/go.geojson v1.4.0
 	github.com/plutov/paypal/v4 v4.0.0
 	github.com/smira/go-point-clustering v1.0.1
+	github.com/stripe/stripe-go/v72 v72.53.0
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
 	rsc.io/quote v1.5.2
 )
