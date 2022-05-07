@@ -18,6 +18,8 @@ replace b00m.in/finisher/comms => ./comms
 
 replace b00m.in/finisher/subs => ./subs
 
+replace b00m.in/finisher/tmpl => ./tmpl
+
 //replace github.com/lib/pq => ../mygo/src/github.com/lib/pq
 
 go 1.13

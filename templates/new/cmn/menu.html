@@ -1,0 +1,7 @@
+{{define "menu"}}
+	{{range $k, $v := .Categories}}
+	    <li class="f5 dib mr4" role="menuitem">
+		<a href="{{ $k }}" class="dim link light-silver">{{ $v }}</a>
+	    </li>
+	{{ end }} 
+{{end}}

@@ -7,6 +7,7 @@ import (
         "io"
 	"b00m.in/finisher/data"
 	"b00m.in/finisher/comms"
+	"b00m.in/finisher/tmpl"
         "net/http"
         "strconv"
         "strings"
@@ -150,7 +151,7 @@ func handleAPI(w http.ResponseWriter, r *http.Request) {
                         return
                 case "packets":
                         return
-                case "summary": // /api/summary/hourly/2021-Jan-01/2021-Jan-31
+                case "summary": // /api/summary/hourly/hash/2021-Jan-01/2021-Jan-31
                         var err error
                         freq := "hourly"
                         from := time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC)
@@ -159,22 +160,26 @@ func handleAPI(w http.ResponseWriter, r *http.Request) {
                         if len(toks) > 3 {
                                 freq = toks[3]
                                 if len(toks) > 4 {
-                                        from, err = time.Parse(shortform, toks[4])
-                                        if err != nil {
-                                                glog.Errorf("time.Parse %v \n", err)
-                                        }
                                         if len(toks) > 5 {
-                                                to, err = time.Parse(shortform, toks[5])
+                                                from, err = time.Parse(shortform, toks[5])
                                                 if err != nil {
                                                         glog.Errorf("time.Parse %v \n", err)
+                                                }
+                                                if len(toks) > 6 {
+                                                        to, err = time.Parse(shortform, toks[6])
+                                                        if err != nil {
+                                                                glog.Errorf("time.Parse %v \n", err)
+                                                        }
                                                 }
                                         }
                                 }
                         }
+                        glog.Infof("handleApi get api/summary: %v %v \n", from, to)
                         ss, err := data.GetSummaries(from, to, freq)
                         if err != nil {
                                 glog.Errorf("GetSummaries %v \n", err)
                         }
+                        w.Header().Set("Access-Control-Allow-Origin", "*")
                         err = json.NewEncoder(w).Encode(ss)
                         if err != nil {
                                 glog.Errorf("json.Encode %v \n", err)
@@ -368,6 +373,10 @@ func handlePubs(w http.ResponseWriter, r *http.Request) {
                                 }
                                 return
                         }
+                /*case "css":
+                        render := Render {Message: "Nothing here", Categories: dflt_ctgrs, User: you.Name}
+                        _ = tmpl_css.ExecuteTemplate(w, "base", render)
+                        return*/
                 case "default":
                         glog.Infof("Nothing to see at %s \n", r.URL.Path)
                         render := Render {Message: "Nothing here", Categories: dflt_ctgrs, User: you.Name}
@@ -594,6 +603,76 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
                                 if err != nil {
                                         glog.Errorf("Https %v \n", err)
                                         rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        }
+                case "newnew": // /subs/newnew
+                        if sub == "" {
+                                glog.Infof("handlesubs get new no cookie \n")
+                                render := Render {Message: "New", Categories: dflt_ctgrs, User: "new"}
+                                err := tmpl_new_sbs_new.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: "new"}
+                                        _ = tmpl_new_sbs_new.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                        } else {
+                                glog.Infof("handlesubs get new %s \n", sub)
+                                render := RenderOne {Message: "You", Sub: you, Categories: dflt_ctgrs, User: you.Name}
+                                err := tmpl_new_sbs_you.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: "new"}
+                                        _ = tmpl_new_sbs_new.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                        }
+                case "newlogin": // /subs/newlogin
+                        if sub == "" {
+                                glog.Infof("handlesubs get login no cookie \n")
+                                render := Render {Message: "Sign In", Categories: dflt_ctgrs, User: "new"}
+                                err := tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: "new"}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        } else {
+                                glog.Infof("handlesubs get login %s \n", sub)
+                                render := RenderOne {Message: "You", Sub: you, Categories: dflt_ctgrs, User: you.Name}
+                                err := tmpl_adm_sbs_you.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        }
+                case "newyou": // /subs/newyou
+                        if sub == "" {
+                                glog.Infof("handlesubs get you no cookie \n")
+                                render := Render {Message: "Login", Categories: dflt_ctgrs, User: "new"}
+                                err := tmpl_adm_sbs_lin.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: "new"}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        } else {
+                                glog.Infof("handlesubs get you %s \n", sub)
+                                render := RenderOne {Message: "You", Sub: you, Categories: dflt_ctgrs, User: you.Name}
+                                err := tmpl_adm_sbs_you.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := Render{Message: "Render error", Categories: dflt_ctgrs, User: "new"}
                                         _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
                                         return
                                 }
@@ -1021,6 +1100,580 @@ func handleSubs(w http.ResponseWriter, r *http.Request) {
         }
 }
 
+// uses dflt_ctgrs
+func handleNewSubs(w http.ResponseWriter, r *http.Request) {
+        var err error
+        sub := ""
+        var you *data.Sub
+        ctx := r.Context()
+        if v := ctx.Value("user"); v != nil {
+                //fmt.Println("found value:", v)
+                you = v.(*data.Sub)
+                if you != nil && you.Name != "new" {
+                        sub = you.Email
+                }
+        }
+        switch r.Method{
+        case "GET":
+                toks := strings.Split(r.URL.Path, "/")
+                glog.Infof("handleNew %s %v %d \n", r.Method, toks, len(toks))
+                switch toks[3] {
+                case "register":
+                        render := tmpl.Render {Message: "Sign Up", Categories: []string{"News", "Docs", "Gridwatch", "Leaderboard", "Community", "Github"}, User: you.Name}
+                        err = tmpl_new_sbs_new.ExecuteTemplate(w, "base", render)
+                        if err != nil {
+                                glog.Errorf("Https %v \n", err)
+                                rendere := tmpl.Render{Message: "tmpl.Render error"}
+                                _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                return
+                        }
+                        return
+                case "login":
+                        if sub == "" {
+                                render := tmpl.Render {Message: "Sign In", Categories: []string{"News", "Docs", "Gridwatch", "Leaderboard", "Community", "Github"}, User: you.Name}
+                                err = tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := tmpl.Render{Message: "tmpl.Render error"}
+                                        _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        } else {
+                                render := tmpl.GetSummaryRender(you)
+                                err = tmpl_new_sbs_smr.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        return
+                                }
+                                return
+                                /*pbs, err := data.GetPubsForSub(you.Id)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        epbs := make([]*data.Pub, 3)
+                                        rendere := tmpl.Render {Message: "Welcome" + you.Name + " - Device error", Pubs: epbs, Categories: dflt_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                //render := tmpl.Render {Message: "Pubs", Pubs: pbs, Categories: dflt_ctgrs, User: you.Name}
+                                render := tmpl.Render {Message: "Welcome " + you.Name + " - Devices", Pubs: pbs, Categories: dflt_ctgrs, User: you.Name}
+                                err = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        return
+                                }
+                                return*/
+                        }
+                case "logout":
+                        if sub == "" {
+                                glog.Infof("handlenew get logout no cookie \n")
+                                render := tmpl.Render {Message: "Login", Categories: dflt1_ctgrs, User: "new"}
+                                err := tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: "new"}
+                                        _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        } else {
+                                http.SetCookie(w, &http.Cookie{Name: "sub", Value: "gst", /*Domain:"b00m.in",*/ SameSite: http.SameSiteLaxMode, Path: "/", MaxAge: -600, HttpOnly: true, Expires: time.Now().Add(time.Second * -120)})
+                                glog.Infof("handlenew get logout %s \n", sub)
+                                render := tmpl.Render {Message: "Login", Categories: dflt1_ctgrs, User: "new"}
+                                err := tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs}
+                                        _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        }
+                case "summary": // devices online, faults, current power 
+                        if sub == "" {
+                                _ = tmpl.ExecuteTemplate(w, tmpl_new_sbs_lin, tmpl_new_sbs_lin)
+                                return
+                        } else {
+                                // get device summary (total, online, protected, power1, .., power4)
+                                /*ps, err := data.GetPubStatsForSub(you.Id)
+                                if err != nil {
+                                        glog.Errorf("GetPubStatsForSub %v \n", err)
+                                }
+                                render := tmpl.RenderSummary {Message: "Welcome " + you.Name + " - Summary", Categories: dflt_ctgrs, User: you.Name, Total: ps.T, Online: ps.O, Protected: ps.P, P1: ps.P1, P2: ps.P2, P3: ps.P3, P4: ps.P4}*/
+                                render := tmpl.GetSummaryRender(you)
+                                err = tmpl_new_sbs_smr.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        return
+                                }
+                                return
+                        }
+                case "packets": // /subs/nuevo/packets/id
+                        if len(toks) <= 4 {
+                                glog.Infof("Nothing to see at %s \n", r.URL.Path)
+                                render := tmpl.Render {Message: "Nothing to see here", Categories: dflt1_ctgrs, User: you.Name}
+                                _ = tmpl_pbs.ExecuteTemplate(w, "base", render)
+                                return
+                        } else {
+                                id, err := strconv.ParseInt(toks[4], 10, 64)
+                                if err != nil {
+                                        glog.Infof("strconv: %v \n", err)
+                                        rendere := tmpl.Render{Message: "Nothing to see here", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                np := 100
+                                pks, err := data.GetLastPackets(id, np)
+                                if err != nil || pks == nil || len(pks) == 0 {
+                                        glog.Infof("Https %v \n", err)
+                                        rendere := tmpl.Render {Message: "Packets error", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                end := pks[0].Timestamp.Format("2006-Jan-02")
+                                start := pks[0].Timestamp.Add(time.Hour * -48).Format("2006-Jan-02")
+                                render := tmpl.Rendern {Message: "Most Recent Readings", Id: id, Packets: pks, Start: start, End: end, Freq: "hourly", Categories: dflt1_ctgrs, User: you.Name}
+                                err = tmpl_new_pck_lst.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        fmt.Printf("Https %v \n", err)
+                                        return
+                                }
+                                return
+                        }
+                case "pubs":
+                        if len(toks) == 4 { // /new/subs/pubs
+                                if sub == "" {
+                                        glog.Infof("handlenewsubs get pubs no cookie \n")
+                                        render := tmpl.Render {Message: "Login", Categories: dflt1_ctgrs, User: you.Name}
+                                        err := tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: you.Name}
+                                                _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        return
+                                } else {
+                                        glog.Infof("handlenewsubs get pubs %s : %d \n", sub, you.Id)
+                                        pubs, err := data.GetPubsForSub(you.Id)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := tmpl.Render{Message: "No pubs for you", Categories: dflt1_ctgrs, User: you.Name}
+                                                _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        render := tmpl.Render {Message: "Welcome " + you.Name + " - Devices", Pubs: pubs, Categories: dflt1_ctgrs, User: you.Name}
+                                        err = tmpl_new_pbs_lst.ExecuteTemplate(w, "base", render)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: you.Name}
+                                                _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        return
+                                }
+                        } else { // /subs/pubs/<id> 
+                                if sub == "" {
+                                        glog.Infof("handlenewsubs new/subs/pubs/<id> no cookie \n")
+                                        render := tmpl.Render {Message: "Login", Categories: dflt1_ctgrs, User: you.Name}
+                                        err := tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: you.Name}
+                                                _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        return
+                                } else {
+                                        id, err := strconv.ParseInt(toks[4], 10, 64)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: you.Name}
+                                                _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        pub, err := data.GetPubById(id)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := tmpl.Render{Message: "No pubs for you", Categories: dflt1_ctgrs, User: you.Name}
+                                                _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        var render tmpl.RenderOne
+                                        devicename,err := data.GetPubDeviceName(pub.Hash)
+                                        if err != nil {
+                                                glog.Errorf("Https handle subs/pubs/%d : %v \n", id, err)
+                                                pc := &data.PubConfig{Kwp: 0, Kwpmake: "unknown", Kwr: 0, Kwrmake: "unknown"}
+                                                render = tmpl.RenderOne{Message: "Unknown", Pub: pub, PubConfig: pc, Categories: dflt1_ctgrs, User: you.Name}
+                                        } else {
+                                                pc, err := data.GetPubConfigByHash(pub.Hash)
+                                                if err != nil {
+                                                        pc = &data.PubConfig{Kwp: 0, Kwpmake: "unknown", Kwr: 0, Kwrmake: "unknown"}
+                                                }
+                                                render = tmpl.RenderOne{Message: devicename, Pub: pub, PubConfig: pc, Categories: dflt1_ctgrs, User: you.Name}
+                                        }
+                                        err = tmpl_new_pbs_dts.ExecuteTemplate(w, "base", render)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: you.Name}
+                                                _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        return
+                                }
+                        }
+                case "faults":
+                        if sub == "" {
+                                glog.Infof("handlenew get faults no cookie \n")
+                                render := tmpl.Render {Message: "Sign in", Categories: dflt1_ctgrs, User: you.Name}
+                                err := tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: "new"}
+                                        _ = tmpl_new_flts_lst.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        } else {
+                                glog.Infof("handlenew get faults %s : %d \n", sub, you.Id)
+                                pubs, err := data.GetPubFaultsForSub(you.Id)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := tmpl.Render{Message: "No Faults", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_new_flts_lst.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                render := tmpl.Render {Message: "Faults", Pubs: pubs, Categories: dflt1_ctgrs, User: you.Name}
+                                err = tmpl_new_flts_lst.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_new_flts_lst.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        }
+                case "you": // /subs/new/you
+                        if sub == "" {
+                                glog.Infof("handlesubs post sub/pubs w/o cookie \n")
+                                _ = tmpl.ExecuteTemplate(w, tmpl_new_sbs_lin, tmpl_new_sbs_lin)
+                        } else {
+                                glog.Infof("handlesubs post sub/pubs w cookie \n")
+                                _ = tmpl.ExecuteTemplate(w, tmpl_new_sbs_you, tmpl_new_sbs_you, you)
+                        }
+                        return
+                default:
+                        render := tmpl.Render {Message: "Yours"}
+                        err = tmpl_pbs.ExecuteTemplate(w, "base", render)
+                        if err != nil {
+                                glog.Errorf("Https %v \n", err)
+                                rendere := tmpl.Render{Message: "tmpl.Render error"}
+                                _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                return
+                        }
+                        return
+                }
+        case "POST":
+                toks := strings.Split(r.URL.Path, "/")
+                glog.Infof("handleSubs %s %v \n", r.Method, toks)
+                if len(toks) < 3 {
+                        glog.Infof("No posting at %s \n", r.URL.Path)
+                        render := tmpl.Render {Message: "No posting here", Categories: dflt1_ctgrs, User: you.Name}
+                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                        return
+                }
+                err := r.ParseForm()
+                if err != nil {
+                        glog.Errorf("handleSubs post  %v", err)
+                        render := tmpl.Render{Message: "Parse form error", Categories: dflt1_ctgrs, User: you.Name}
+                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                        return
+                }
+                switch toks[3] {
+                case "new":
+                        if sub == "" {
+                                v := r.Form
+                                n := v.Get("name")
+                                e := v.Get("email")
+                                p := v.Get("phone")
+                                pw := v.Get("pswd")
+                                if s, err := data.GetSubByEmail(e); s != nil {
+                                        glog.Errorf("handlesubs post putsubs %v \n", err)
+                                        render := tmpl.Render{Message: "Sub email exists", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                        return
+                                }
+                                sha1str := data.Sha1Str(e) // 16 characters of sha1 hash
+                                you = &data.Sub{Email:e, Name:n, Phone:p, Pswd:pw, Verification: sha1str}
+                                id, err := data.PutSub(you)
+                                if err != nil {
+                                        glog.Errorf("handlesubs post putsubs %v \n", err)
+                                        rendere := tmpl.Render{Message: "Couldn't create Sub", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                // success
+                                //newregs <- comms.Entity{e, n} // put in channel to send email
+                                glog.Infof("handleSubs set cookie %s \n", e)
+                                http.SetCookie(w, &http.Cookie{Name: "sub", Value: e, Domain:"b00m.in", Path: "/", MaxAge: 600, HttpOnly: true, Expires: time.Now().Add(time.Second * 600)})
+                                glog.Infof("handlesubs post putsubs %s %d \n", n, id)
+                                render := tmpl.Render{Message: "Welcome " + n, Categories: dflt1_ctgrs, User: you.Name}
+                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                return
+                        } else {
+                                glog.Infof("handlesubs post sub/new with %s \n", sub)
+                                render := tmpl.Render{Message: "Already " + sub, Categories: dflt1_ctgrs, User: you.Name}
+                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                return
+                        }
+                case "login":
+                        if sub == "" {
+                                glog.Infof("handlesubs post sub/login w/o sub \n")
+                                v := r.Form
+                                agr := v.Get("agree")
+                                if agr != "1" {
+                                        glog.Infof("agreed: %v \n", agr)
+                                        render := tmpl.Render {Message: "Login - please agree to Privacy Policy", Categories: dflt1_ctgrs, User: "new"}
+                                        err := tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: "new"}
+                                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        return
+                                }
+                                e := v.Get("email")
+                                pw := v.Get("pswd")
+                                s, err := data.GetSubByEmail(e)
+                                if err != nil {
+                                        glog.Errorf("handlesubs post login %v \n", err)
+                                        rendere := tmpl.Render{Message: "Email doesn't exist", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_new_sbs_lin.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                if !data.CheckPswd(e, pw) {
+                                        glog.Errorf("handlesubs post putsubs %s == %s \n", s.Pswd, pw)
+                                        render := tmpl.Render{Message: "Password Doesn't match", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
+                                        return
+                                }
+                                // success
+                                glog.Infof("handleSubs post login set cookie %s \n", e)
+                                http.SetCookie(w, &http.Cookie{Name: "sub", Value: e, /*Domain:"b00m.in",*/ SameSite: http.SameSiteLaxMode, Path: "/", MaxAge: 600, HttpOnly: true, Expires: time.Now().Add(time.Second * 600)})
+                                you = s
+                                glog.Infof("handlesubs post login %s %s \n", s.Name, e)
+                                render := tmpl.GetSummaryRender(you)
+                                err = tmpl_new_sbs_smr.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        return
+                                }
+                                //pbs, err := data.GetPubs(20)
+                                /*pbs, err := data.GetPubsForSub(you.Id)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        epbs := make([]*data.Pub, 3)
+                                        rendere := tmpl.Render {Message: "Welcome " + s.Name + " - Device Error", Pubs: epbs, Categories: dflt_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                render := tmpl.Render {Message: "Welcome " + s.Name + " - Devices", Pubs: pbs, Categories: dflt_ctgrs, User: you.Name}
+                                err = tmpl_adm_pbs_lst.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        return
+                                }*/
+                                return
+                        } else {
+                                glog.Infof("handlesubs post sub/lin w/ %s \n", sub)
+                                render := tmpl.Render{Message: "Already " + sub, Categories: dflt1_ctgrs, User: you.Name}
+                                _ = tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
+                                return
+                        }
+                case "packets": // /subs/nuevo/packets/id
+                        if len(toks) <= 4 {
+                                glog.Infof("Nothing to see at %s \n", r.URL.Path)
+                                render := tmpl.Render {Message: "Nothing to see here", Categories: dflt1_ctgrs, User: you.Name}
+                                _ = tmpl_pbs.ExecuteTemplate(w, "base", render)
+                                return
+                        } else {
+                                //hitdb := true
+                                id, err := strconv.ParseInt(toks[4], 10, 64)
+                                if err != nil {
+                                        glog.Infof("strconv: %v \n", err)
+                                        //hitdb = false
+                                }
+                                v := r.Form
+                                ss := v.Get("start")
+                                es := v.Get("end")
+                                fr := v.Get("freq")
+                                /*start, err := time.Parse("2006-Jan-02", ss)
+                                if err != nil {
+                                        glog.Infof("time.Parse: %v \n", err)
+                                        hitdb = false
+                                }
+                                end,err := time.Parse("2006-Jan-02", es)
+                                if err != nil {
+                                        glog.Infof("time.Parse: %v \n", err)
+                                        hitdb = false
+                                }*/
+                                pks := make([]*data.Packet, 0)
+                                /*var pks []*data.Packet
+                                if hitdb {
+                                        pks, err = data.GetPacketsByHash(id, start, end)
+                                        if err != nil || pks == nil || len(pks) == 0 {
+                                                glog.Infof("Https %v \n", err)
+                                                rendere := tmpl.Render {Message: "Packets error", Categories: dflt1_ctgrs, User: you.Name}
+                                                _ = tmpl_pbs.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                }*/
+                                render := tmpl.Rendern {Message: "Summaries", Id: id, Packets: pks, Start: ss, End: es, Freq:fr, Categories: dflt1_ctgrs, User: you.Name}
+                                err = tmpl_new_pck_lst.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        fmt.Printf("Https %v \n", err)
+                                        return
+                                }
+                                return
+                        }
+                case "pubs":
+                        if sub == "" {
+                                glog.Infof("handlesubs post sub/pubs w/o cookie \n")
+                                _ = tmpl.ExecuteTemplate(w, tmpl_new_sbs_lin, tmpl_new_sbs_lin)
+                                return
+                        } else {
+                                glog.Infof("handlesubs post sub/pubs w cookie %s \n", sub)
+                                hash := 0
+                                if len(toks) < 5 {
+                                        glog.Errorf("Https %v \n", err)
+                                        render := tmpl.Render{Message: "No pubid provided", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                                        return
+                                } else {
+                                        hash, err = strconv.Atoi(toks[4])
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := tmpl.Render{Message: "No pubid provided", Categories: dflt1_ctgrs, User: you.Name}
+                                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                }
+                                v := r.Form
+                                //nickname can only be set during app provisioning
+                                //nn := v.Get("nickname")                                
+                                kwps := v.Get("kwp")
+                                kwpm := v.Get("kwpm")
+                                kwrs := v.Get("kwr")
+                                kwrm := v.Get("kwrm")
+                                kwp, err := strconv.ParseFloat(kwps, 32)
+                                if err != nil {
+                                        glog.Errorf("handlenewsubs post pubconfig %v \n", err)
+                                        rendere := tmpl.Render{Message: "Couldn't update pubconfig", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                kwr, err := strconv.ParseFloat(kwrs, 32)
+                                if err != nil {
+                                        glog.Errorf("handlenewsubs post pubconfig %v \n", err)
+                                        rendere := tmpl.Render{Message: "Couldn't update pubconfig", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                notify := v.Get("notify")
+                                notific := false
+                                if notify == "on" {
+                                        notific = true
+                                }
+                                pc := &data.PubConfig{Hash:int64(hash), Kwp: float32(kwp), Kwpmake: kwpm, Kwr: float32(kwr), Kwrmake: kwrm, Notify: notific}
+                                if err := data.UpdatePubConfig(pc); err != nil {
+                                        glog.Errorf("handlenewsubs post putpubconfig %v \n", err)
+                                        rendere := tmpl.Render{Message: "Couldn't update pub", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                pub, err := data.GetPubByHash(pc.Hash)
+                                if err != nil {
+                                        glog.Errorf("handlenewsubs post update pubconfig get pub %v \n", err)
+                                        rendere := tmpl.Render{Message: "Couldn't update pub", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                render := tmpl.RenderOne{Message: pc.Nickname, Pub: pub, PubConfig: pc, Categories: dflt1_ctgrs, User: you.Name}
+                                err = tmpl_new_pbs_dts.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: you.Name}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        }
+                case "you": // /subs/new/you
+                        if sub == "" {
+                                glog.Infof("handlesubs post sub/pubs w/o cookie \n")
+                                _ = tmpl.ExecuteTemplate(w, tmpl_new_sbs_lin, tmpl_new_sbs_lin)
+                        }
+                        v := r.Form
+                        oldp := v.Get("old_password")
+                        newp := v.Get("password")
+                        conf := v.Get("confirm")
+                        if conf != newp {
+                                render := tmpl.RenderOne {Message: "You - password not changed - try again", Sub: you, Categories: dflt1_ctgrs, User: you.Name}
+                                err := tmpl_new_sbs_you.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: "new"}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        } else {
+                                check := data.CheckPswd(sub, oldp)
+                                if !check {
+                                        glog.Errorf("/subs/new/you post check pswd %v \n", oldp)
+                                        render := tmpl.RenderOne {Message: "You - password not changed - try again", Sub: you, Categories: dflt1_ctgrs, User: you.Name}
+                                        err := tmpl_new_sbs_you.ExecuteTemplate(w, "base", render)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: "new"}
+                                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        return
+                                }
+                                err := data.UpdateSub(&data.Sub{Email: sub, Pswd: newp})
+                                if err != nil {
+                                        render := tmpl.RenderOne {Message: "You - password not changed - try again", Sub: you, Categories: dflt1_ctgrs, User: you.Name}
+                                        err := tmpl_new_sbs_you.ExecuteTemplate(w, "base", render)
+                                        if err != nil {
+                                                glog.Errorf("Https %v \n", err)
+                                                rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: "new"}
+                                                _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                                return
+                                        }
+                                        return
+                                }
+                                http.SetCookie(w, &http.Cookie{Name: "sub", Value: sub, Domain:"b00m.in", Path: "/", MaxAge: 600, HttpOnly: true, Expires: time.Now().Add(time.Second * 600)})
+                                render := tmpl.RenderOne {Message: "You - password changed", Sub: you, Categories: dflt1_ctgrs, User: you.Name}
+                                err = tmpl_new_sbs_you.ExecuteTemplate(w, "base", render)
+                                if err != nil {
+                                        glog.Errorf("Https %v \n", err)
+                                        rendere := tmpl.Render{Message: "tmpl.Render error", Categories: dflt1_ctgrs, User: "new"}
+                                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", rendere)
+                                        return
+                                }
+                                return
+                        }
+                default:
+                        glog.Infof("No posting at %s \n", r.URL.Path)
+                        render := tmpl.Render {Message: "No posting here", Categories: dflt1_ctgrs, User: you.Name}
+                        _ = tmpl_adm_err.ExecuteTemplate(w, "base", render)
+                        return
+                }
+        }
+}
+
 func fileHandler(w http.ResponseWriter, r *http.Request) {
         ruri := r.RequestURI
         //glog.Infof("content-type %s \n", ruri)
@@ -1033,7 +1686,6 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
                 w.Header().Set("Content-Type", "text/javascript")
         }
         staticfileserver.ServeHTTP(w, r)
-
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -1051,7 +1703,6 @@ func subwayLinesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
 	w.Write(data.GeoJSON["subway-lines.geojson"])
 }
-
 
 /*
 

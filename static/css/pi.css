@@ -1,7 +1,7 @@
 body {
   font-family: "Open Sans", Arial;
   background: #EEE;
-  text-align: center;
+  /*text-align: center;*/
 }
 body * {
   font-weight: 300;
@@ -107,7 +107,14 @@ body * {
 .pie-chart__legend span {
   float: right;
 }
-
+.pie-charts-h {
+  text-align: left;
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+          flex-direction: row;
+}
 .pie-charts {
   float: left;
   display: -webkit-box;

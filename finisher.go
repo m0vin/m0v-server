@@ -20,6 +20,7 @@ import (
 	"b00m.in/finisher/data"
 	"b00m.in/finisher/comms"
 	"b00m.in/finisher/subs"
+        "b00m.in/finisher/tmpl"
         "net/http"
         "os"
         //"reflect"
@@ -126,8 +127,21 @@ var (
 	tmpl_adm_sbs_cnt = template.Must(template.ParseFiles("templates/adm/contact", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 	tmpl_adm_sbs_trm = template.Must(template.ParseFiles("templates/adm/terms", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_subs", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
         tmpl_gds_ods = template.Must(template.New("tmpl_gds_orders").Funcs(funcMap).ParseFiles("templates/adm/orders", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_orders", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head", "templates/cmn/menu", "templates/cmn/footer"))
+        //tmpl_css = template.Must(template.ParseFiles("templates/new_css"))
+
+	tmpl_pbs = template.Must(template.ParseFiles("templates/base.html", "templates/body.html", "templates/head.html", "templates/new/subs/cmn/snav.html", "templates/new/subs/cmn/hnav.html", "templates/chart.css", "templates/chart.js", "templates/menu.js"))
+	tmpl_mstr = template.Must(template.ParseFiles("templates/new/cmn/base.html", "templates/new/subs/cmn/snav.html", "templates/new/subs/cmn/hnav.html", "templates/new/body.html", "templates/new/subs/cmn/footer.html", "templates/head.html", "templates/chart.css", "templates/chart.js", "templates/menu.js"))
+	tmpl_new_sbs_smr = template.Must(template.Must(tmpl_mstr.Clone()).Funcs(tmpl.FuncMap).ParseFiles("templates/new/subs/bodysummary.html", "templates/pi.js"))
+	tmpl_new_pbs_lst = template.Must(template.Must(tmpl_mstr.Clone()).Funcs(tmpl.FuncMap).ParseFiles("templates/new/subs/bodypubs.html"))
+	tmpl_new_flts_lst = template.Must(template.Must(tmpl_mstr.Clone()).ParseFiles("templates/new/subs/bodyfaults.html"))
+	tmpl_new_pbs_dts = template.Must(template.Must(tmpl_mstr.Clone()).ParseFiles("templates/new/subs/bodyconfig.html"))
+	tmpl_new_pck_lst = template.Must(template.Must(tmpl_mstr.Clone()).ParseFiles("templates/new/subs/bodypackets.html"))
+	tmpl_new_sbs_you = template.Must(template.Must(tmpl_mstr.Clone()).ParseFiles("templates/new/subs/bodyyou.html"))
+	tmpl_new_sbs_lin = template.Must(template.ParseFiles("templates/new/subs/subs_login.html", "templates/new/cmn/body.html", "templates/new/cmn/center_subs.html", "templates/new/cmn/base.html", "templates/new/cmn/head_2back.html", "templates/new/cmn/menu.html", "templates/new/cmn/footer.html"))
+	tmpl_new_sbs_new = template.Must(template.ParseFiles("templates/new/subs/subs_new.html", "templates/new/cmn/body.html", "templates/new/cmn/center_subs.html", "templates/new/cmn/base.html", "templates/new/cmn/head_2back.html", "templates/new/cmn/menu.html", "templates/new/cmn/footer.html"))
         //dflt_ctgrs = []Category{Category{Name: "Docs", }, Category{Name: "News", }, Category{Name: "Gridwatch", }, Category{Name: "Leaderboard"}, Category{Name: "Community"}, Category{Name: "Github"}}
         dflt_ctgrs = subs.Category{}
+        dflt1_ctgrs = []string{"News", "Docs", "Gridwatch", "Leaderboard", "Community", "Github"}
 	tmpl_grw = template.Must(template.ParseFiles("templates/adm/cmn/body1", "templates/adm/cmn/right", "templates/adm/cmn/center_grw", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head_2back", "templates/cmn/menu", "templates/cmn/footer"))
 )
 
@@ -187,12 +201,12 @@ func init() {
 }
 
 func main() {
+	flag.Parse()
 	glog.Infof("%s \n", "subs server starting...")
         config, err := subs.ConfigureConfig(os.Args[1:])
         if err != nil {
                 glog.Errorf("configureconfig %v \n", err)
         }
-	flag.Parse()
         s, err := subs.NewServer(config)
         if err != nil {
                 glog.Errorf("newserver %v \n", err)
@@ -278,6 +292,9 @@ func main() {
 }
 
 func startHttp() {
+        var authChain = []data.Middleware {
+                data.AuthMiddleware,
+        }
         mux := http.NewServeMux()
         //mux.Handle("/debug/vars", expvar.Handler())
         /*mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -291,7 +308,9 @@ func startHttp() {
                 //mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
                 mux.Handle("/static/", http.StripPrefix("/static/", http.HandlerFunc(fileHandler)))
                 mux.Handle("/api/", http.HandlerFunc(handleAPI))
+                mux.Handle("/subs/nuevo/", data.BuildChain(handleNewSubs, authChain...))
                 mux.Handle("/subs/", http.HandlerFunc(handleSubs))
+                //mux.Handle("/pubs/new", http.HandlerFunc(handlePubs))
                 mux.Handle("/pubs/", http.HandlerFunc(handlePubs))
                 mux.Handle("/data/subway-stations", http.HandlerFunc(data.SubwayStationsHandler))
                 mux.Handle("/data/subway-lines", http.HandlerFunc(subwayLinesHandler))

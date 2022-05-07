@@ -9,6 +9,7 @@ import (
         "crypto/sha1"
         "math/rand"
         "sort"
+        "strconv"
 	"time"
 )
 
@@ -20,7 +21,6 @@ var (
         kwrmakes = []string{"Delta", "Enphase", "Fronius", "Growatt", "Huawei", "K-Star", "SMA"}
         names = []string{"Absolutno", "Achird", "Acrab", "Adhara", "Adhil", "Albali", "Alderamin", "Algorab", "Alruba", "Atlas", "Bellatrix", "Capella", "Citadelle", "Copernicus", "Maia", "Markeb", "Mimosa", "Nahn", "Navi", "Nashira", "Nihal", "Polaris", "Bibha", "Revati", "Sarin", "Shaula", "Sirius", "Subra", "Vega", "Ashvini", "Bharani", "Kritika", "Rohini", "Mrigahirsha", "Ardra", "Punarvasu", "Pushya", "Ashlesha", "Magha", "Falguni", "Hasta", "Chitra", "Svati", "Vishakha", "Anuradha", "Jyeshtha", "Mula", "Ashadha", "Shravana", "Shatabhisha", "Dhanista", "Bhadrapada", "Revati", "Abhijit"}
 )
-
 
 type dbaccount struct {
 	New sq.NullInt64
@@ -64,9 +64,9 @@ type Packet struct {
         Status bool `json:"status"`
         Voltage float64 `json:"voltage"`
         Current float64 `json:"current"`
-        ActiPwr float64 `json:"activePower"`
-        AppaPwr float64 `json:"apparentPwr"`
-        ReacPwr float64 `json:"reactivePwr"`
+        ActiPwr float64 `json:"activePower"` // W
+        AppaPwr float64 `json:"apparentPwr"` // VA
+        ReacPwr float64 `json:"reactivePwr"` // VAr
         PwrFctr float64 `json:"powerFactor"`
         Frequency float64 `json:"freq"`
         ImActEn float64 `json:"impActvEnrg"`
@@ -81,6 +81,10 @@ type Packet struct {
 
 func (p *Packet) FormattedTimestamp() string {
         return p.Timestamp.Format("2006-01-02 15:04:05")
+}
+
+func (p *Packet) PwrToKw(divisor float64) string {
+        return strconv.FormatFloat(p.ActiPwr/divisor, 'f', 4, 64)
 }
 
 type Confo struct {
@@ -101,6 +105,7 @@ type Pub struct {
         Hash int64 `json:"hash"`
         Created time.Time `json:"created,omitempty"`
         Creator int64 `json:"email"`
+        Protected bool `json:"protected"`
 }
 
 func (p *Pub) FormattedCreated() string {
@@ -340,7 +345,7 @@ func GetPubs(limit int) ([]*Pub, error) {
                 glog.Error(err)
                 return nil, err
         }
-        rows, err := db.Query("select pub_id, created_at, latitude, longitude, hash from pub order by created_at desc limit $1", limit)
+        rows, err := db.Query("select pub_id, created_at, hash, latitude, longitude, altitude, protected from pub order by created_at desc limit $1", limit)
         if err != nil {
                 glog.Errorf("data.GetPubs %v \n", err)
                 return nil, err
@@ -353,7 +358,7 @@ func GetPubs(limit int) ([]*Pub, error) {
         pbs := make([]*Pub, 0)
         for rows.Next() {
                 pb := &Pub{}
-                if err := rows.Scan(&pb.Id, &pb.Created, &pb.Latitude, &pb.Longitude, &pb.Hash); err != nil {
+                if err := rows.Scan(&pb.Id, &pb.Created, &pb.Hash, &pb.Latitude, &pb.Longitude, &pb.Altitude, &pb.Protected); err != nil {
                         glog.Errorf("data.GetPubs %v \n", err)
                         return pbs, fmt.Errorf("No data for pubs \n")
                 }
@@ -394,7 +399,7 @@ func GetPubsForSub(sub_id int64) ([]*Pub, error) {
                 glog.Error(err)
                 return nil, err
         }
-        rows, err := db.Query("select pub_id, created_at, latitude, longitude, hash from pub where creator=$1 order by created_at desc limit $2", sub_id, 10)
+        rows, err := db.Query("select pub_id, created_at, latitude, longitude, hash from pub where creator=$1 order by created_at desc limit $2", sub_id, 20)
         if err != nil {
                 glog.Errorf("data.GetPubs %v \n", err)
                 return nil, err
@@ -473,6 +478,51 @@ func GetPubFaultsForSub(sub_id int64) ([]*Pub, error) {
                 pbs = append(pbs, pb)
         }
         return pbs, nil
+}
+
+type PubStat struct {
+        T int64
+        O int64
+        P int64
+        P1 float64
+        P2 float64
+        P3 float64
+        P4 float64
+}
+
+//GetPubStatsForSub queries db for count of total, protected pubs by sub and last power readings of all pubs by sub - TODO - there should be a separate single table getting updated with this data in the background such that this user query hits only one table once. 
+func GetPubStatsForSub(sub_id int64) (*PubStat, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query("select count(*) from pub where creator=$1", sub_id)
+        if err != nil {
+                glog.Errorf("data.GetPubStatsForSub dbquery %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        ps := &PubStat{}
+        rows.Next() // should be only one row
+        err = rows.Scan(&ps.T)
+        if err != nil {
+                glog.Errorf("data.GetPubStatsForSub rowscan %v \n", err)
+                return nil, err
+        }
+        ps.O=ps.T
+        rows, err = db.Query("select count(*) from pub where creator=$1 and protected=true", sub_id)
+        if err != nil {
+                glog.Errorf("data.GetPubStatsForSub dbquery %v \n", err)
+                return nil, err
+        }
+        rows.Next() // should be only one row
+        err = rows.Scan(&ps.P)
+        if err != nil {
+                glog.Errorf("data.GetPubStatsForSub rowscan %v \n", err)
+                return nil, err
+        }
+        return ps, nil
 }
 
 // GetPubFaults queries table packet for the latest `unprotected` packet from a pub in the latest 100 packets received where notify config for that pub is true. Either fix, turn notify off or receive daily emails. 
@@ -1016,6 +1066,9 @@ func GetLastPackets(pubHash int64, limit int) ([]*Packet, error) {
                 //glog.Infof("data.GetSubs appending \n")
                 pcks = append(pcks, pck)
         }
+        if len(pcks) == 0 {
+                pcks = GetDummyPackets(10)
+        }
         return pcks, nil
 }
 
@@ -1027,6 +1080,32 @@ func GetPackets(from, to time.Time) ([]*Packet, error) {
                 return nil, err
         }
         rows, err := db.Query(getpackets, from, to)
+        if err != nil {
+                glog.Errorf("data.GetLastPacket %v \n", err)
+                return nil, err
+        }
+        defer rows.Close()
+        pcks := make([]*Packet, 0)
+        for rows.Next() {
+                pck := &Packet{}
+                if err := rows.Scan(&pck.Id, &pck.Timestamp, &pck.Voltage, &pck.Frequency, &pck.Status, &pck.ActiPwr, &pck.AppaPwr, &pck.ReacPwr, &pck.PwrFctr, &pck.ImActEn, &pck.ExActEn, &pck.ImRctEn, &pck.ExRctEn, &pck.TlActEn, &pck.TlRctEn); err != nil {
+                        glog.Errorf("data.GetLastPackets %v \n", err)
+                        return pcks, fmt.Errorf("No data for packets \n")
+                }
+                //glog.Infof("data.GetSubs appending \n")
+                pcks = append(pcks, pck)
+        }
+        return pcks, nil
+}
+
+//GetPacketsByHash queries for packets from pub with pubHash, from (exclusive) to (inclusive) times provided as argument
+func GetPacketsByHash(pubHash int64, from, to time.Time) ([]*Packet, error) {
+        db, err := GetDB()
+        if err != nil {
+                glog.Error(err)
+                return nil, err
+        }
+        rows, err := db.Query(getpacketsbyhash, pubHash, from, to)
         if err != nil {
                 glog.Errorf("data.GetLastPacket %v \n", err)
                 return nil, err
