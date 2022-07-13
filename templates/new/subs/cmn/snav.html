@@ -1,1 +1,45 @@
-/home/sridhar/dev/modgo/src/github.com/b00m-in/summarise/templates/new/subs/cmn/snav.html
+{{define "snav"}}
+            <nav id="main-nav" class="main-nav">
+                <a class="logo" href="/" title="B00MIN"><!-- <span class="mobile-logo"></span> --></a>
+                <div class="main-nav-list">
+                    <ul class="main-nav-group dashboards">
+                        <li class="main-nav-item">
+                            <a href="/subs/nuevo/summary" class="main-nav-link">
+                                <i class="nav-icon icon-layers"></i>
+                                <span class="nav-text">Summary</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="main-nav-group main">
+                        <li class="main-nav-item">
+                            <a href="/subs/nuevo/pubs" class="main-nav-link">
+                                <i class="nav-icon icon-devices"></i>
+                                <span class="nav-text">Devices</span>
+                            </a>
+                        </li>
+                        <li class="main-nav-item">
+                            <a href="/subs/nuevo/faults" class="main-nav-link">
+                                <i class="nav-icon icon-challenges"></i>
+                                <span class="nav-text">Faults</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="main-nav-group social">
+                        <li class="main-nav-item">
+                            <a href="/subs/nuevo/connections" class="main-nav-link">
+                                <i class="nav-icon icon-people-2"></i>
+                                <span class="nav-text">Connections</span>
+                            </a>
+                        </li>
+                        <li class="main-nav-item">
+                            <a href="/subs/nuevo/groups" class="main-nav-link">
+                                <i class="nav-icon icon-people-3"></i>
+                                    <span class="nav-text">Groups</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="main-nav-group other">
+                    </ul>
+                </div>
+            </nav>
+{{end}}

@@ -1,1 +1,74 @@
-/home/sridhar/dev/modgo/src/github.com/b00m-in/summarise/templates/new/subs/bodysummary.html
+{{define "content"}}
+        <div class="content page activity-list flexColumn">
+            <div id="pageContainer">
+                <link rel="stylesheet" type="text/css" href="/static/css/pi.css">
+                {{ $t := .Total}}
+                {{ $o := .Online}}
+                {{ $p := .Protected}}
+                {{ $d := sub .Total .Online}}
+                {{ $u := sub .Total .Protected}}
+                {{ $x := div $o $t }}
+                {{ $y := 0.0 }}
+                {{ if le $x 0.5 }}
+                    {{ $y = divf $x 0.5 }}
+                    {{ $y = mul $y 180 }}
+                {{ else }}
+                    {{ $y = subf $x 0.5 }}
+                    {{ $y = mul $y 360 }}
+                {{ end}}
+                {{ $z := div $p $t }}
+                {{ $a := 0.0 }}
+                {{ if le $z 0.5 }}
+                    {{ $a = divf $z 0.5 }}
+                    {{ $a = mul $a 180 }}
+                {{ else }}
+                    {{ $a = subf $z 0.5 }}
+                    {{ $a = mul $a 360 }}
+                {{ end}}
+                <div class="pie-charts-h">
+                    <div class="pieID--categories pie-chart--wrapper">
+                        {{ $percent := mul $x 100.0 }}
+                        <h2>Online {{ printf "%.0f %s" $percent "%" }}</h2>
+                        <div class="pie-chart">
+                            <div class="pie-chart__pie">
+                                <div class="slice s0-0" style="transform: rotate(0deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(0deg) translate3d(0px, 0px, 0px); background-color: olivedrab;"></span></div><div class="slice s0-1" style="transform: rotate(180deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(0deg) translate3d(0px, 0px, 0px); background-color: crimson;"></span></div> {{ if le $x 0.5 }} <div class="slice s1-0" style="transform: rotate( {{$y}}deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate( 0deg) translate3d(0px, 0px, 0px); background-color: crimson;"></span></div> {{ else }} <div class="slice s1-0" style="transform: rotate( {{$y}}deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(0deg) translate3d(0px, 0px, 0px); background-color: olivedrab;"></span></div>
+                                {{ end }}
+                                </div>
+                                <ul class="pie-chart__legend">
+                                    <li style="border-color: olivedrab;"><em>Oniline</em><span>{{.Online}}</span></li>
+                                    <li style="border-color: crimson;"><em>Offline</em><span>{{$d}}</span></li>
+                                </ul>
+                        </div>
+                    </div>
+                    <div class="pieID--categories pie-chart--wrapper">
+                        <h2>Status</h2>
+                        <div class="pie-chart">
+                            <div class="pie-chart__pie">
+                                <!--<div class="slice s0-0" style="transform: rotate(-1deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(0deg) translate3d(0px, 0px, 0px); background-color: olivedrab;"></span></div><div class="slice s0-1" style="transform: rotate(178deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(-81.52deg) translate3d(0px, 0px, 0px); background-color: olivedrab;"></span></div><div class="slice s1-0" style="transform: rotate(275.48deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(-95.48deg) translate3d(0px, 0px, 0px); background-color: crimson;"></span></div></div>-->
+                                <div class="slice s0-0" style="transform: rotate(0deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(0deg) translate3d(0px, 0px, 0px); background-color: olivedrab;"></span></div><div class="slice s0-1" style="transform: rotate(180deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(0deg) translate3d(0px, 0px, 0px); background-color: crimson;"></span></div> {{ if le $z 0.5 }} <div class="slice s1-0" style="transform: rotate( {{$a}}deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate( 0deg) translate3d(0px, 0px, 0px); background-color: crimson;"></span></div> {{ else }} <div class="slice s1-0" style="transform: rotate( {{$a}}deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(0deg) translate3d(0px, 0px, 0px); background-color: olivedrab;"></span></div>
+                                {{ end }}
+                                </div>
+                                <ul class="pie-chart__legend">
+                                    <li style="border-color: olivedrab;"><em>Protected</em><span>{{$p}}</span></li>
+                                    <li style="border-color: crimson;"><em>Unprotected</em><span>{{$u}}</span></li>
+                                </ul>
+                        </div>
+                    </div>
+                    <div class="pieID--operations pie-chart--wrapper">
+                        <h2>Power</h2>
+                        <div class="pie-chart">
+                            <div class="pie-chart__pie"><div class="slice s0-0" style="transform: rotate(-1deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(-4.04deg) translate3d(0px, 0px, 0px); background-color: olivedrab;"></span></div><div class="slice s1-0" style="transform: rotate(173.96deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(-122.84deg) translate3d(0px, 0px, 0px); background-color: orange;"></span></div><div class="slice s2-0" style="transform: rotate(230.12deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(-101.6deg) translate3d(0px, 0px, 0px); background-color: crimson;"></span></div><div class="slice s3-0" style="transform: rotate(307.52deg) translate3d(0px, 0px, 0px);"><span style="transform: rotate(-127.52deg) translate3d(0px, 0px, 0px); background-color: navy;"></span></div></div>
+                            <ul class="pie-chart__legend">
+                                <li style="border-color: olivedrab;"><em>Online grid up</em><span>{{.P1}}Kw</span></li>
+                                <li style="border-color: orange;"><em>Online grid down</em><span>{{.P2}}Kw</span></li>
+                                <li style="border-color: crimson;"><em>Offline</em><span>{{.P3}}Kw</span></li>
+                                <li style="border-color: navy;"><em>Dead</em><span>{{.P4}}Kw</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+	{{template "pijs" .}}
+{{end}}
+

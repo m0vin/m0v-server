@@ -1,0 +1,57 @@
+{{define "body"}}
+    <body class="">
+        <div class="container">
+            {{template "snav" .}}
+            <div class="main-body">
+                {{template "hnav" .}}
+                <div class="content page activity-list flexColumn">
+                    <div id="pageContainer">
+                        <h3> {{.Message}} </h3>
+                        <div class="row-fluid list-items flexItemAutoHeight">
+                            <ul class="row-fluid list">
+                                <li class="list-item animated row-fluid">
+                                    <div class="pull-left activity-date date-col">
+                                        <span class="unit"></span>
+                                        <span class="label"></span>
+                                    </div> 
+                                    <div class="pull-left xtype-icon activity-col">
+                                        <i class="icon-star"></i> 
+                                    </div>
+                                    <div class="pull-left five-metric metric-container">
+                                        <div class="metric-col">
+                                            <span class="unit" title="11.43 km"><span class="" data-placement="top" ></span></span>
+                                            <span class="label ellipsis" title="Distance"></span>
+                                        </div>
+                                        <div class="metric-col">
+                                            <span class="unit" title="59:36"><span class="" data-placement="top" ></span></span>
+                                            <span class="label ellipsis" ></span>
+                                        </div>
+                                        <div class="metric-col">
+                                            <span class="unit" ><span class="" data-placement="top" ></span></span>
+                                            <span class="label ellipsis"></span>
+                                        </div>
+                                        <div class="metric-col">
+                                            <span class="unit" ><span class="" data-placement="top" ></span></span>
+                                            <span class="label ellipsis"></span>
+                                        </div>
+                                        <div class="metric-col">
+                                            <span class="unit" ><span class="" data-placement="top" ></span></span>
+                                            <span class="label ellipsis" ></span>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <figure class="highcharts-figure">
+                            <div id="container"></div>
+                            <p class="highcharts-description">
+                                Export and import energy over time
+                            </p>
+                        </figure>
+                    </div>
+                </div>
+            </div>
+        </div>
+	{{template "menujs" .}}
+    </body>
+{{end}}

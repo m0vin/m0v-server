@@ -126,7 +126,7 @@ func PubDeetsHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(fc)
 	if err != nil {
 		str := fmt.Sprintf("Couldn't encode results: %s", err)
-                glog.Error("PubDeetshandler couldn't envode results %v \n", err)
+                glog.Error("PubDeetshandler couldn't encode results %v \n", err)
 		http.Error(w, str, 500)
 		return
 	}

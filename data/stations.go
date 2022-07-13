@@ -60,6 +60,10 @@ type Station struct {
 	feature *geojson.Feature
 }
 
+func NewStation(f *geojson.Feature) *Station {
+        return &Station{f}
+}
+
 // Bounds implements `rtree.Spatial` so we can load
 // stations into an `rtree.Rtree`.
 func (s *Station) Bounds() *rtree.Rect {

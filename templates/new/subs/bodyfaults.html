@@ -1,1 +1,64 @@
-/home/sridhar/dev/modgo/src/github.com/b00m-in/summarise/templates/new/subs/bodyfaults.html
+{{define "content"}}
+        <div class="content page activity-list flexColumn">
+            <div id="pageContainer">
+                <div class="row-fluid page-content flexColumn activity-list-page-wrapper">
+                     <h3> {{.Message}} <a href="/subs/nuevo/faults/map"> Map View</a> </h3>
+                <div class="row-fluid list-items flexItemAutoHeight">
+                    <ul class="row-fluid list">
+                        {{range .Pubs}}
+                        <li class="list-item animated row-fluid">
+                            <div class="pull-left activity-date date-col">
+                                <span class="unit">{{.FormattedCreated}}</span>
+                                <span class="label">Created</span>
+                            </div> 
+                            <!--<div class="pull-left xtype-icon activity-col">
+                                <i class="icon-star"></i> 
+                            </div>-->
+                            <div class="pull-left activity-name-type title-col">
+                                <div class="activity-name-edit inline-edit inline-edit-text-field"><a href="/modern/activity/7131354504" class="inline-edit-target ">{{.Hash}} </a>
+                                    <!--<button class="inline-edit-trigger modal-trigger" aria-label="Edit">
+                                        <i class="icon-pencil"></i>
+                                    </button>-->
+                                </div>
+                            </div>
+                            <div class="pull-left five-metric metric-container">
+                                <div class="metric-col">
+                                    <span class="unit" title="11.43 km"><span class="" data-placement="top" title="11.43 km">{{.Protected}}</span></span>
+                                    <span class="label ellipsis" title="Distance">Protected</span>
+                                </div>
+                                <div class="metric-col">
+                                    <span class="unit" title="59:36"><span class="" data-placement="top" title="59:36"><a href="/subs/pubs/{{.Id}}"> {{.Id}} </a></span></span>
+                                
+                                    <span class="label ellipsis" title="Time">ID</span>
+                                </div>
+                                <div class="metric-col">
+                                    <span class="unit" title="5:13 min/km"><span class="" data-placement="top" title="5:13 min/km">{{.Latitude}}</span></span>
+                                    <span class="label ellipsis" title="Avg Pace">Latitude</span>
+                                </div>
+                                <div class="metric-col">
+                                    <span class="unit" title="80 m"><span class="" data-placement="top" title="80 m">{{.Longitude}}</span></span>
+                                    <span class="label ellipsis" title="Elev Gain">Longitude</span>
+                                </div>
+                                <div class="metric-col">
+                                    <span class="unit" title="157 bpm"><span class="" data-placement="top" title="157 bpm">{{.Altitude}}</span></span>
+                                    <span class="label ellipsis" title="Avg HR">Altitude</span>
+                                </div>
+                            </div>
+                            <div class="pull-left edit-btn edit-col">
+                                <form class="inline" method="GET" action="/subs/nuevo/packets/{{.Hash}}">
+                                    <button class="icon-reports-bar has-tooltip inline" title="" aria-label="Delete Activity" data-rel="tooltip" data-html="true" data-original-title="View Data" type="submit"></button>
+                                </form>
+                                <form class="inline" method="GET" action="/subs/nuevo/pubs/{{.Id}}">
+                                    <button class="icon-pencil js-activity-metrics-edit has-tooltip inline" title="" aria-label="Edit Activity Metrics" data-rel="tooltip" data-html="true" data-original-title="Edit" type="submit"></button>
+                                </form>
+                                <!--<a class="icon-reports-bar has-tooltip" title="" aria-label="Delete Activity" data-rel="tooltip" data-html="true" data-original-title="View Data" href="/new/pubs/packets/{{.Hash}}"></a>
+                                <a class="icon-pencil js-activity-metrics-edit has-tooltip" title="" aria-label="Edit Activity Metrics" data-rel="tooltip" data-html="true" data-original-title="Edit" href="/new/subs/pubs/{{.Id}}"></a>-->
+                            </div>
+                        </li>
+                        {{end}}
+                    </ul>
+                </div>
+                </div>
+            </div>
+        </div>
+{{end}}

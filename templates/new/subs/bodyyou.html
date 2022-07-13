@@ -1,1 +1,69 @@
-/home/sridhar/dev/modgo/src/github.com/b00m-in/summarise/templates/new/subs/bodyyou.html
+{{define "content"}}
+        <div class="content page activity-list flexColumn">
+            <div id="pageContainer">
+                <div class="page-content">
+                    <div class="row-fluid top-l">
+                        <form class="form-horizontal" action="/subs/nuevo/you" method="POST">
+                            <h5>
+                                Edit {{.Message}} {{.Sub.Name}}
+                            </h5>
+                            <div class="control-group">
+                                <label class="control-label" for="userType">Type</label>
+                                <div class="controls controls-row">
+                                    <select id="userType" name="userType">
+                                        <option geartype="none" selected="">Select one ...</option>
+                                        <option value="PV" typeid="1" userType="ind" selected="true">Individual</option>
+                                        <option value="EV" typeid="2" userType="biz">Business</option>
+                                        <option value="H2" typeid="3" userType="np">Non-profit</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="partialFormPlaceholder">
+                                <div class="control-group">
+                                    <label class="control-label" for="email">Email</label>
+                                    <div class="controls controls-row">
+                                        <span id="email" style="display: inline;">
+                                            <input id="email" type="email" name="email" value="{{.Sub.Email}}" disabled>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="phone">Phone</label>
+                                    <div class="controls controls-row">
+                                        <input type="text" class="" id="phone" name="phone" value="{{.Sub.Phone}}">
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="old_password">Existing Password</label>
+                                    <div class="controls controls-row">
+                                        <input class="" id="old_password" type="password" maxlength="50" name="old_password" placeholder="***********">
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="kwr">Password</label>
+                                    <div class="controls controls-row">
+                                        <input class="" id="password" type="password" maxlength="50" name="password" placeholder="***********">
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="confirm">Confirm</label>
+                                    <div class="controls controls-row">
+                                        <input class="input-small" id="confirm" type="password" name="confirm" placeholder="***********">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <div class="controls controls-row">
+                                    <button type="submit" class="btn right-s">Save</button>
+                                </div>
+                            </div>
+                            <div class="alert alert-error" style="display:none;">
+                                Sorry, we were unable to process your request. Please try again.
+                            </div>
+                        </form>
+                    </div>
+                </div> <!-- end .page-content -->
+            </div>
+        </div>
+{{end}}
+

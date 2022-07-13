@@ -1,1 +1,59 @@
-/home/sridhar/dev/modgo/src/github.com/b00m-in/summarise/templates/new/subs/cmn/hnav.html
+{{define "hnav"}}
+        <header id="header" class="header">
+            <div class="header-controls">
+                <div class="main-nav-toggle">
+                    <i id="icon-arrow-left" class="icon-arrow-left" aria-label="Toggle Menu">
+                    </i>
+                </div>
+            </div>
+            <div class="header-nav">
+                <div class="header-nav-item">
+                    <a href="/subs/nuevo/leaderboard" class="header-nav-link icon-personal-records" aria-label="Leaderboard" data-rel="tooltip" data-html="true" data-original-title="Leaderboard" data-placement="bottom">
+                        <span class="new-items-alert hide" style="display: none;"></span>
+                    </a>
+                </div>
+                <div class="header-nav-item">
+                    <a href="/subs/nuevo/messages" class="header-nav-link icon-inbox" aria-label="Requests &amp; Notifications" data-rel="tooltip" data-html="true" data-original-title="Requests &amp; Notifications" data-placement="bottom">
+                        <span class="new-items-alert hide" style="display: none;"></span>
+                    </a>
+                </div>
+                <div class="header-nav-item">
+                    <a href="#" class="header-nav-link icon-reports-bar" aria-label="Devices" data-rel="tooltip" data-html="true" data-original-title="Reports" data-placement="bottom">
+                        <span class="new-items-alert hide" style="display: none;"></span>
+                    </a>
+                    <div class="header-nav-menu">
+                        <div class="header-nav-menu-section">
+                            <ul>
+                                <li><a href="/subs/nuevo/pubs" class="colored">Devices</a></li>
+                                <li><a href="/subs/nuevo/faults" class="sign-out colored">Faults</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-nav-item">
+                    <a href="#" class="header-nav-link icon-gear" aria-label="Settings" data-rel="tooltip" data-html="true" data-original-title="Settings" data-placement="bottom">
+                        <span class="new-items-alert hide" style="display: none;"></span>
+                    </a>
+                    <div class="header-nav-menu">
+                        <div class="header-nav-menu-section">
+                            <div class="full-name h5">
+                                {{.User}}
+                            </div>
+                            <!--<a href="/modern/profile/eafefd35-3604-4d32-b034-d07b5fcedfcc" class="colored view-profile">View Profile</a>-->
+                        </div>
+                        <div class="header-nav-menu-section">
+                            <ul>
+                                <li><a href="/subs/nuevo/you" class="colored account-settings">Account Settings</a></li>
+                            </ul>
+                        </div>
+                        <div class="header-nav-menu-section">
+                            <ul>
+                                <li><a href="/subs/nuevo/help" class="colored">Help</a></li>
+                                <li><a href="/subs/nuevo/logout" class="sign-out colored">Sign Out</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+{{end}}

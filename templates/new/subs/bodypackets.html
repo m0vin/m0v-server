@@ -1,1 +1,97 @@
-/home/sridhar/dev/modgo/src/github.com/b00m-in/summarise/templates/new/subs/bodypackets.html
+{{define "content"}}
+        <div class="content page activity-list flexColumn of-a">
+            <form class="form-horizontal" action="/subs/nuevo/packets/{{.Id}}" method="POST">
+            <span><input id="startdate" name="start" type="text" >
+            <input id="enddate" name="end" type="text" >
+            <button type="submit" class="btn right-s">Update</button></span></form>
+            <div id="pageContainer">
+                <figure class="highcharts-figure">
+                    <div id="container"></div>
+                    <p class="highcharts-description">
+                        Power &amp; Energy over time
+                    </p>
+                </figure>
+                <div class="row-fluid page-content flexColumn activity-list-page-wrapper">
+                     <h3> {{.Message}} </h3>
+                <div class="row-fluid list-items flexItemAutoHeight">
+                    <ul class="row-fluid list">
+                        {{range .Packets}}
+                        <li class="list-item animated row-fluid">
+                            <div class="pull-left activity-date date-col">
+                                <span class="unit">{{.FormattedTimestamp}}</span>
+                                <span class="label">Timestamp</span>
+                            </div> 
+                            <!--<div class="pull-left xtype-icon activity-col">
+                                <i class="icon-star"></i> 
+                            </div>-->
+                            <div class="pull-left activity-name-type title-col">
+                                <div class="activity-name-edit inline-edit inline-edit-text-field"><!--<a href="/modern/activity/7131354504" class="inline-edit-target "></a>-->
+                                    {{.Id}} 
+                                    <!--<button class="inline-edit-trigger modal-trigger" aria-label="Edit">
+                                        <i class="icon-pencil"></i>
+                                    </button>-->
+                                </div>
+                            </div>
+                            <div class="pull-left five-metric metric-container">
+                                <div class="metric-col">
+                                    <span class="unit" title="11.43 km"><span class="" data-placement="top">{{.Status}}</span></span>
+                                    <span class="label ellipsis" title="Distance">Protected</span>
+                                </div>
+                                <div class="metric-col">
+                                    <span class="unit" ><span class="" data-placement="top"> {{printf "%.2f" .Voltage}} </span></span>
+                                
+                                    <span class="label ellipsis" >Voltage (V)</span>
+                                </div>
+                                <div class="metric-col">
+                                    <span class="unit"><span class="" data-placement="top">{{printf "%.2f" .Frequency}}</span></span>
+                                    <span class="label ellipsis">Frequency (Hz)</span>
+                                </div>
+                                <div class="metric-col">
+                                    <span class="unit"><span class="" data-placement="top">{{.PwrToKw 1000.0}}</span></span>
+                                    <span class="label ellipsis">Active Power (Kw)</span>
+                                </div>
+                                <div class="metric-col">
+                                    <span class="unit"><span class="" data-placement="top">{{printf "%.2f" .ImActEn}}</span></span>
+                                    <span class="label ellipsis">Import Energy (Kwh)</span>
+                                </div>
+                                <div class="metric-col">
+                                    <span class="unit"><span class="" data-placement="top">{{printf "%.2f" .ExActEn}}</span></span>
+                                    <span class="label ellipsis">Export Energy (Kwh)</span>
+                                </div>
+                            </div>
+                        </li>
+                        {{end}}
+                    </ul>
+                </div>
+                </div>
+            </div>
+        </div>
+	{{template "chartjs" .}}
+        <script src="/static/datepicker.min.js"></script>
+        <script>
+                const picker = datepicker('#startdate', {id: 4, maxDate: new Date(), formatter: (input, date, instance) => {
+    //const value = date.toISOString().substring(0,10)
+    date.setHours(date.getHours() + 6)
+    const value = date.toISOString().substring(0,10)
+    input.value = value //.replace(/\//g, '-') // => '2099-12-31'
+  } })
+                const epicker = datepicker('#enddate', {id: 4, maxDate: new Date(), formatter: (input, date, instance) => {
+    //const value = date.toISOString().substring(0,10)
+    date.setHours(date.getHours() + 6)
+    const value = date.toISOString().substring(0,10)
+    input.value = value.replace(/\//g, '-') // => '2099-12-31'
+  }})
+                const se = document.getElementById("startdate");
+                const ee = document.getElementById("enddate");
+                // Toggle the calendar when the input box is clicked.
+                se.addEventListener('click', e => {
+                // THIS!!! Prevent Datepicker's event handler from hiding the calendar.
+                e.stopPropagation()
+
+                // Toggle the calendar.
+                const isHidden = picker.calendarContainer.classList.contains('qs-hidden')
+                picker[isHidden ? 'show' : 'hide']()
+})
+        </script>
+{{end}}
+

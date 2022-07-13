@@ -129,7 +129,7 @@ var (
         tmpl_gds_ods = template.Must(template.New("tmpl_gds_orders").Funcs(funcMap).ParseFiles("templates/adm/orders", "templates/adm/cmn/body", "templates/adm/cmn/right", "templates/adm/cmn/center_orders", "templates/adm/cmn/search", "templates/cmn/base", "templates/cmn/head", "templates/cmn/menu", "templates/cmn/footer"))
         //tmpl_css = template.Must(template.ParseFiles("templates/new_css"))
 
-	tmpl_pbs = template.Must(template.ParseFiles("templates/base.html", "templates/body.html", "templates/head.html", "templates/new/subs/cmn/snav.html", "templates/new/subs/cmn/hnav.html", "templates/chart.css", "templates/chart.js", "templates/menu.js"))
+	tmpl_pbs = template.Must(template.ParseFiles("templates/base.html", "templates/new/body.html", "templates/head.html", "templates/new/subs/cmn/snav.html", "templates/new/subs/cmn/hnav.html", "templates/chart.css", "templates/chart.js", "templates/menu.js"))
 	tmpl_mstr = template.Must(template.ParseFiles("templates/new/cmn/base.html", "templates/new/subs/cmn/snav.html", "templates/new/subs/cmn/hnav.html", "templates/new/body.html", "templates/new/subs/cmn/footer.html", "templates/head.html", "templates/chart.css", "templates/chart.js", "templates/menu.js"))
 	tmpl_new_sbs_smr = template.Must(template.Must(tmpl_mstr.Clone()).Funcs(tmpl.FuncMap).ParseFiles("templates/new/subs/bodysummary.html", "templates/pi.js"))
 	tmpl_new_pbs_lst = template.Must(template.Must(tmpl_mstr.Clone()).Funcs(tmpl.FuncMap).ParseFiles("templates/new/subs/bodypubs.html"))

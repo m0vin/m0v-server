@@ -70,17 +70,17 @@ func clusterStations(spatials []rtree.Spatial, zoom int) (*geojson.FeatureCollec
 		if err != nil {
 			return nil, err
 		}
-		f.SetProperty("title", fmt.Sprintf("%v Station", name))
+		f.SetProperty("title", fmt.Sprintf("%v Site", name))
 		f.SetProperty("description", notes)
-		f.SetProperty("type", "station")
+		f.SetProperty("type", "site")
 		fc.AddFeature(f)
 	}
 	for _, clstr := range clusters {
 		ctr, _, _ := clstr.CentroidAndBounds(pl)
 		f := geojson.NewPointFeature([]float64{ctr[0], ctr[1]})
 		n := len(clstr.Points)
-		f.SetProperty("title", fmt.Sprintf("Station Cluster #%v", clstr.C+1))
-		f.SetProperty("description", fmt.Sprintf("Contains %v stations", n))
+		f.SetProperty("title", fmt.Sprintf("Site Cluster #%v", clstr.C+1))
+		f.SetProperty("description", fmt.Sprintf("Contains %v sites", n))
 		f.SetProperty("type", "cluster")
 		fc.AddFeature(f)
 	}

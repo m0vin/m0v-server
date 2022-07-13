@@ -153,32 +153,46 @@ func handleAPI(w http.ResponseWriter, r *http.Request) {
                         return
                 case "summary": // /api/summary/hourly/hash/2021-Jan-01/2021-Jan-31
                         var err error
+                        hash := int64(13582)
                         freq := "hourly"
                         from := time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC)
                         to := time.Date(2021, time.January, 31, 0, 0, 0, 0, time.UTC)
                         const shortform = "2006-Jan-02"
+                        const shortform1 = "2006-01-02"
                         if len(toks) > 3 {
                                 freq = toks[3]
                                 if len(toks) > 4 {
+                                        hash, err = strconv.ParseInt(toks[4], 10, 64)
+                                        if err != nil {
+                                                glog.Errorf("strconv parseint %v \n", err)
+                                        }
                                         if len(toks) > 5 {
                                                 from, err = time.Parse(shortform, toks[5])
                                                 if err != nil {
                                                         glog.Errorf("time.Parse %v \n", err)
+                                                        from, err = time.Parse(shortform1, toks[5])
+                                                        if err != nil {
+                                                                glog.Errorf("time.Parse %v \n", err)
+                                                        }
                                                 }
                                                 if len(toks) > 6 {
                                                         to, err = time.Parse(shortform, toks[6])
                                                         if err != nil {
                                                                 glog.Errorf("time.Parse %v \n", err)
+                                                                to, err = time.Parse(shortform1, toks[6])
+                                                                if err != nil {
+                                                                        glog.Errorf("time.Parse %v \n", err)
+                                                                }
                                                         }
                                                 }
                                         }
                                 }
                         }
-                        glog.Infof("handleApi get api/summary: %v %v \n", from, to)
-                        ss, err := data.GetSummaries(from, to, freq)
+                        ss, err := data.GetSummariesByHash(from, to, freq, hash)
                         if err != nil {
                                 glog.Errorf("GetSummaries %v \n", err)
                         }
+                        glog.Infof("handleApi get api/summary: %v %v %v %v \n", from, to, freq, len(ss))
                         w.Header().Set("Access-Control-Allow-Origin", "*")
                         err = json.NewEncoder(w).Encode(ss)
                         if err != nil {
@@ -1116,7 +1130,7 @@ func handleNewSubs(w http.ResponseWriter, r *http.Request) {
         switch r.Method{
         case "GET":
                 toks := strings.Split(r.URL.Path, "/")
-                glog.Infof("handleNew %s %v %d \n", r.Method, toks, len(toks))
+                glog.Infof("handleNewSubs %s %v %d \n", r.Method, toks, len(toks))
                 switch toks[3] {
                 case "register":
                         render := tmpl.Render {Message: "Sign Up", Categories: []string{"News", "Docs", "Gridwatch", "Leaderboard", "Community", "Github"}, User: you.Name}
@@ -1130,7 +1144,7 @@ func handleNewSubs(w http.ResponseWriter, r *http.Request) {
                         return
                 case "login":
                         if sub == "" {
-                                render := tmpl.Render {Message: "Sign In", Categories: []string{"News", "Docs", "Gridwatch", "Leaderboard", "Community", "Github"}, User: you.Name}
+                                render := tmpl.Renderm {Message: "Sign In", Categories: dflt_ctgrs, User: you.Name}
                                 err = tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
                                 if err != nil {
                                         glog.Errorf("Https %v \n", err)
@@ -1167,7 +1181,7 @@ func handleNewSubs(w http.ResponseWriter, r *http.Request) {
                 case "logout":
                         if sub == "" {
                                 glog.Infof("handlenew get logout no cookie \n")
-                                render := tmpl.Render {Message: "Login", Categories: dflt1_ctgrs, User: "new"}
+                                render := tmpl.Renderm {Message: "Login", Categories: dflt_ctgrs, User: "new"}
                                 err := tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
                                 if err != nil {
                                         glog.Errorf("Https %v \n", err)
@@ -1179,7 +1193,7 @@ func handleNewSubs(w http.ResponseWriter, r *http.Request) {
                         } else {
                                 http.SetCookie(w, &http.Cookie{Name: "sub", Value: "gst", /*Domain:"b00m.in",*/ SameSite: http.SameSiteLaxMode, Path: "/", MaxAge: -600, HttpOnly: true, Expires: time.Now().Add(time.Second * -120)})
                                 glog.Infof("handlenew get logout %s \n", sub)
-                                render := tmpl.Render {Message: "Login", Categories: dflt1_ctgrs, User: "new"}
+                                render := tmpl.Renderm {Message: "Login", Categories: dflt_ctgrs, User: "new"}
                                 err := tmpl_new_sbs_lin.ExecuteTemplate(w, "base", render)
                                 if err != nil {
                                         glog.Errorf("Https %v \n", err)
@@ -1375,7 +1389,7 @@ func handleNewSubs(w http.ResponseWriter, r *http.Request) {
                 }
         case "POST":
                 toks := strings.Split(r.URL.Path, "/")
-                glog.Infof("handleSubs %s %v \n", r.Method, toks)
+                glog.Infof("handleNewSubs %s %v \n", r.Method, toks)
                 if len(toks) < 3 {
                         glog.Infof("No posting at %s \n", r.URL.Path)
                         render := tmpl.Render {Message: "No posting here", Categories: dflt1_ctgrs, User: you.Name}
@@ -1507,17 +1521,20 @@ func handleNewSubs(w http.ResponseWriter, r *http.Request) {
                                 v := r.Form
                                 ss := v.Get("start")
                                 es := v.Get("end")
-                                fr := v.Get("freq")
-                                /*start, err := time.Parse("2006-Jan-02", ss)
+                                fr := "hourly"
+                                start, err := time.Parse("2006-01-02", ss)
                                 if err != nil {
                                         glog.Infof("time.Parse: %v \n", err)
-                                        hitdb = false
+                                        //hitdb = false
                                 }
-                                end,err := time.Parse("2006-Jan-02", es)
+                                end,err := time.Parse("2006-01-02", es)
                                 if err != nil {
                                         glog.Infof("time.Parse: %v \n", err)
-                                        hitdb = false
-                                }*/
+                                        //hitdb = false
+                                }
+                                if end.Sub(start) > (time.Hour * 24) {
+                                        fr = "daily"
+                                }
                                 pks := make([]*data.Packet, 0)
                                 /*var pks []*data.Packet
                                 if hitdb {

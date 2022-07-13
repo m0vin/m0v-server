@@ -1,1 +1,89 @@
-/home/sridhar/dev/modgo/src/github.com/b00m-in/summarise/templates/new/subs/bodyconfig.html
+{{define "content"}}
+        <div class="content page activity-list flexColumn">
+            <div id="pageContainer">
+                <div class="page-content">
+                    <div class="row-fluid top-l">
+                        <form class="form-horizontal" action="/subs/nuevo/pubs/{{.Pub.Hash}}" method="POST">
+                            <h6>
+                                Edit {{.Message}} |  Location: {{.Pub.Latitude}} {{.Pub.Longitude}}
+                            </h6>
+                            <div class="control-group">
+                                <label class="control-label" for="gearType">Type</label>
+                                <div class="controls controls-row">
+                                    <select id="gearType" name="gearType">
+                                        <option geartype="none" selected="">Select one ...</option>
+                                        <option value="PV" typeid="1" geartype="PV" selected>Photovoltaic (PV)</option>
+                                        <option value="EV" typeid="2" geartype="EV">Electric Vehicle (EV)</option>
+                                        <option value="H2" typeid="3" geartype="H2">Hydrogen (H2)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="partialFormPlaceholder">
+                                <div class="control-group">
+                                    <label class="control-label" for="gearBeginDate">Modules Power Rating</label>
+                                    <div class="controls controls-row">
+                                        <span id="gearBeginDatePlaceHolder" style="display: inline;">
+                                            <input id="1630429225266" type="text" name="kwp" placeholder="" class="has-date-picker  hasDatepicker" aria-label="Pick Date" value="{{.PubConfig.Kwp}}"><span class="help-inline">KWp</span>
+                                            <span id="1630429225266-error" class="help-inline" style="display:none"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="gearMakeModel">Modules Make &amp; Model</label>
+                                    <div class="controls controls-row">
+                                        <input type="text" class="" id="kwpm" name="kwpm" value="{{.PubConfig.Kwpmake}}">
+                                        <!-- <div class="help-block">Example: Trina  </div> -->
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="kwr">Inverter Rating</label>
+                                    <div class="controls controls-row">
+                                        <input class="" id="kwr" type="text" maxlength="50" name="kwr" value="{{.PubConfig.Kwr}}"><span class="help-inline">KW</span>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="kwrm">Inverter Make &amp; Model</label>
+                                    <div class="controls controls-row">
+                                        <input class="input-small" id="kwrm" type="text" name="kwrm" value="{{.PubConfig.Kwrmake}}">
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+                            <h6 id="setting-hr-alert-about">Last notifications sent ... {{.PubConfig.FormattedLastNotified}}</h6>
+                            <div class="control-group">
+                                <label class="control-label">Notifications
+                                    <span class="help-icon" aria-label="Notifications will automatically be sent by the selected method.">
+                                        <i class="icon-help has-tooltip" title="Notifications will automatically be sent by the selected method." data-rel="tooltip" data-html="true" data-original-title="" aria-label=""></i>
+                                    </span>
+                                </label>
+                                    <div id="gearActivityTypes" class="controls controls-row">
+                                        {{if .PubConfig.Notify}}
+                                        <label class="checkbox">
+                                            <input type="checkbox" id="notify" name="notify" typeid="1" typekey="email" checked>Email
+                                        </label>
+                                        {{else}}
+                                        <label class="checkbox">
+                                            <input type="checkbox" id="notify" name="notify"  typeid="1" typekey="email">Email
+                                        </label>
+                                        {{end}}
+                                        <label class="checkbox">
+                                            <input type="checkbox" typeid="2" typekey="cycling">SMS
+                                        </label>
+                                    </div>
+                            </div>
+                            <hr>
+                            <div class="control-group">
+                                <div class="controls controls-row">
+                                    <button type="submit" class="btn right-s">Save</button>
+                                </div>
+                            </div>
+                            <div class="alert alert-error" style="display:none;">
+                                Sorry, we were unable to process your request. Please try again.
+                            </div>
+                        </form>
+                    </div>
+                </div> <!-- end .page-content -->
+            </div>
+        </div>
+{{end}}
+

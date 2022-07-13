@@ -1,1 +1,125 @@
-/home/sridhar/dev/modgo/src/github.com/b00m-in/summarise/templates/new/subs/subs_new.html
+{{define "subs_admin"}}
+<!-- <h2>{{.Message}}</h2>
+<section class="standart">
+  <div class="form-inline">
+    <form action="https://pv.b00m.in/subs/new/" method="post" enctype="application/x-www-form-urlencoded" id="usernew" name="usernew"> 
+      <table>
+	<tr>
+	    <td>
+	      <div class="field">
+	       <label> Name:</label>
+	       <input type="text" value="" name="name">
+	      </div>
+	    </td>
+	    <td>&nbsp;&nbsp;</td>
+	    <td>
+	      <div class="field">
+	      </div>
+	    </td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label> E-Mail:</label>
+	      <input type="text" value="" name="email">
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
+	  </div></td>
+	</tr>
+	<tr>
+	  <td><div class="field">
+	      <label><span class="required">*</span> Phone:</label>
+	      <input type="text" value="" name="phone">
+	  </div></td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
+	  </div></td>
+	</tr>
+	<tr>
+	  <td>
+	    <div class="field">
+	      <label><span class="required">*</span> Password:</label>
+	      <input type="password" value="" name="pswd">
+	    </div>
+	  </td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td>
+	    <div class="field">
+	      <label><span class="required">*</span> Confirm:</label>
+	      <input type="password" value="" name="confirm">
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	   <td> I have read and agree to the <a alt="Privacy Policy" href="/subs/privacy" class="colorbox cboxElement"><b>Privacy Policy</b></a> 
+	    <input type="checkbox" value="1" name="agree">
+	  </td>
+	  <td>&nbsp;&nbsp;</td>
+	  <td><div class="field">
+	    <input type="submit" class="button button-alt" value="Register" /></div></td>
+	</tr>
+      </table> 
+    </form>
+  </div>
+</section> -->
+    <div id="login-component" class="blueForm-basic">
+        <!-- begin register form -->
+        <div id="login-state-default">
+            <h2>{{.Message}} </h2>
+            <form action="/subs/new/" method="post" id="login-form" novalidate="novalidate">
+                <div class="form-alert">
+                    <div id="username-error" style="display:none;"></div>
+                    <div id="password-error" style="display:none;"></div>
+                </div>
+                <div class="textfield">
+                    <label for="email">Name</label>
+                    <!-- If the lockToEmailAddress parameter is specified then we want to mark the field as readonly,
+                    preload the email address, and disable the other input so that null isn't sent to the server. We'll
+                    also style the field to have a darker grey background and disable the mouse pointer
+                     -->
+                    
+                    <!-- If the lockToEmailAddress parameter is NOT specified then keep the existing functionality and disable the readonly input field
+                     -->
+                    <input class="login_name" name="name" id="name" value="" type="email" spellcheck="false" autocorrect="off" autocapitalize="off" aria-required="true">
+                </div>
+                <div class="textfield">
+                    <label for="email">Email</label>
+                    <!-- If the lockToEmailAddress parameter is specified then we want to mark the field as readonly,
+                    preload the email address, and disable the other input so that null isn't sent to the server. We'll
+                    also style the field to have a darker grey background and disable the mouse pointer
+                     -->
+                    
+                    <!-- If the lockToEmailAddress parameter is NOT specified then keep the existing functionality and disable the readonly input field
+                     -->
+                    <input class="login_email" name="email" id="email" value="" type="email" spellcheck="false" autocorrect="off" autocapitalize="off" aria-required="true">
+                </div>
+
+                <div class="textfield">
+                    <label for="pswd">Password</label>
+                    <input type="password" name="pswd" id="pswd" spellcheck="false" autocorrect="off" autocapitalize="off" aria-required="true">
+                     <strong id="capslock-warning" class="information" title="Caps lock is on." style="display: none;">Caps lock is on.</strong>
+                </div>
+                <div class="textfield">
+                    <label for="pswd">Password Confirm</label>
+                    <input type="password" name="confirm" id="confirm" spellcheck="false" autocorrect="off" autocapitalize="off" aria-required="true">
+                     <strong id="capslock-warning" class="information" title="Caps lock is on." style="display: none;">Caps lock is on.</strong>
+                </div>
+                <input type="hidden" name="embed" value="false">
+                <input type="hidden" name="agree" value="1">
+                <input type="hidden" name="_csrf" value="7AB573CBEB2A79741D9C0E111D65EDA85DE8FE7DED6EBB6392F9155FAD8280D98829D63B3D67C5E1A344BF897A6CF7FC3989">
+                <div class="textfield">
+                    <label for="agree">I have read and agree to the <a alt="Privacy Policy" href="/subs/privacy" class="colorbox cboxElement"><b>Privacy Policy</b></a></label>
+                    <input type="checkbox" value="1" name="agree">
+                </div>
+                <button type="submit" id="login-btn-signin" class="btn1" accesskey="l">Register</button>
+                <!-- <span>
+                    <input type="checkbox" name="rememberme" id="login-remember-checkbox" onclick="if (!window.__cfRLUnblockHandlers) return false; if (this.checked) { createAccountConfigURL += '&amp;rememberme=on'; socialConfigURL += '&amp;rememberme=on'; } else { createAccountConfigURL = createAccountConfigURL.replace('&amp;rememberme=on', ''); socialConfigURL = socialConfigURL.replace('&amp;rememberme=on', ''); }">
+                    <label id="login-remember" for="login-remember-checkbox">Remember Me</label>
+                </span> -->
+                <!-- The existence of the "rememberme" parameter at all will remember the user! -->
+            </form>
+        </div>
+        <!-- end register form -->
+        <div class="clearfix"></div> <!-- Ensure that GAuth-component div's height is computed correctly. -->
+    </div>
+{{end}}
