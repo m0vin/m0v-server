@@ -1,1 +1,49 @@
-/home/sridhar/dev/modgo/src/github.com/b00m-in/summarise/templates/new/cmn/body.html
+{{define "body"}}
+<body class="ma0 sans-serif bg-primary-color-light">
+    <nav class="bg-primary-color-dark pv4 w-100" role="navigation">
+        <div class="center flex-ns flex-wrap items-center justify-start mw9">
+            <h1 class="dim f3 lh-solid ml0-ns mr0 mr4-l mv0 pl3 pl4-ns">
+                <a href="https://pv.b00m.in/" class="link white">
+                    <img src="/images/boom.png">
+                </a>
+            </h1>
+            <ul class="list ma0 pa0 dn dib-l">
+                <li class="tftooltip" title="Home"><a href="https://pv.b00m.in"><span class="icon"></span></a></li>
+		{{template "menu" .}}
+            </ul>
+            <div class="db dib-ns pl3">
+                <form id="site-search-form" action="" role="search">
+                <fieldset class="bn ma0 pa0">
+                    <label class="clip" for="search-input">Search</label>
+                    <input type="search" id="search-input" class="needs-js bg-left bn f5 input-reset lh-solid mt3 mt0-ns pl4 pv2 w5 white" placeholder="Search the Docs - WIP" name="search-input" value="" style="background: transparent url('/images/icon-search.png') no-repeat 0 8px /16px 16px;">
+                </fieldset>
+                </form>
+            </div>
+            <span class="absolute mt1 mt2-l pr3 right-0 top-0">
+                {{if eq .User "new"}} 
+                      <span id="login" class="item" > &nbsp; <a href="/subs/nuevo/login">Login</a>
+                         or <a href="/subs/nuevo/register">Register</a>.
+                </span>
+                {{else}}
+                      <span class="dim link light-silver" id="welword">Welcome &nbsp;</span>
+                      <span class="dim link light-silver" id="user"> {{.User}} </span> 
+                      <span id="logout"> 
+                        <a class="dim link light-silver" href="/subs/nuevo/logout"  > &nbsp; Logout </a>
+                      </span>
+                {{end}}
+                <!--<a class="dim link light-silver" href="https://pv.b00m.in/subs/you" aria-label="">Your Account</a> -->
+            </span>
+        </div>
+    </nav>
+
+ 
+    <main class="c014 c016">
+        <div class="c013">
+            {{template "center" .}}
+        </div>
+    </main>
+
+    {{template "footer" .}}
+
+</body>
+{{end}}
