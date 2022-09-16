@@ -1,0 +1,7 @@
+{{define "subs_admin"}}
+<h2>{{.Message}}</h2>
+
+<h3> All queries to bugs@b00m.in </h3>
+
+
+{{end}}

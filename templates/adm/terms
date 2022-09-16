@@ -1,0 +1,14 @@
+{{define "subs_admin"}}
+<h2>Terms</h2>
+<section class="typography"><p>
+	<span style="font-family:tahoma,geneva,sans-serif;">These are our simple terms/conditions.<br>
+	<br>
+	<strong>All products/services provided on a best-effort basis.</strong><br>
+	<br>
+	<strong>Contacting Us</strong><br>
+	<br>
+	If there are any questions regarding these terms you may contact us using email on contact us page.
+	</span></p>
+</section>>
+{{end}}
+
